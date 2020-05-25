@@ -12,32 +12,31 @@ import (
 	"encoding/json"
 )
 
-// CheckStatusWidgetDefinition Check status shows the current status or number of results for any check performed
+// CheckStatusWidgetDefinition Check status shows the current status or number of results for any check performed.
 type CheckStatusWidgetDefinition struct {
-	// Name of the check to use in the widget
+	// Name of the check to use in the widget.
 	Check string `json:"check"`
-	// Group reporting a single check
+	// Group reporting a single check.
 	Group *string `json:"group,omitempty"`
-	// List of tag prefixes to group by in the case of a cluster check
+	// List of tag prefixes to group by in the case of a cluster check.
 	GroupBy  *[]string      `json:"group_by,omitempty"`
 	Grouping WidgetGrouping `json:"grouping"`
-	// List of tags used to filter the groups reporting a cluster check
+	// List of tags used to filter the groups reporting a cluster check.
 	Tags *[]string   `json:"tags,omitempty"`
 	Time *WidgetTime `json:"time,omitempty"`
-	// Title of the widget
+	// Title of the widget.
 	Title      *string          `json:"title,omitempty"`
 	TitleAlign *WidgetTextAlign `json:"title_align,omitempty"`
-	// Size of the title
-	TitleSize *string `json:"title_size,omitempty"`
-	// Type of the widget
-	Type string `json:"type"`
+	// Size of the title.
+	TitleSize *string                         `json:"title_size,omitempty"`
+	Type      CheckStatusWidgetDefinitionType `json:"type"`
 }
 
 // NewCheckStatusWidgetDefinition instantiates a new CheckStatusWidgetDefinition object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewCheckStatusWidgetDefinition(check string, grouping WidgetGrouping, type_ string) *CheckStatusWidgetDefinition {
+func NewCheckStatusWidgetDefinition(check string, grouping WidgetGrouping, type_ CheckStatusWidgetDefinitionType) *CheckStatusWidgetDefinition {
 	this := CheckStatusWidgetDefinition{}
 	this.Check = check
 	this.Grouping = grouping
@@ -50,7 +49,7 @@ func NewCheckStatusWidgetDefinition(check string, grouping WidgetGrouping, type_
 // but it doesn't guarantee that properties required by API are set
 func NewCheckStatusWidgetDefinitionWithDefaults() *CheckStatusWidgetDefinition {
 	this := CheckStatusWidgetDefinition{}
-	var type_ string = "check_status"
+	var type_ CheckStatusWidgetDefinitionType = "check_status"
 	this.Type = type_
 	return &this
 }
@@ -328,9 +327,9 @@ func (o *CheckStatusWidgetDefinition) SetTitleSize(v string) {
 }
 
 // GetType returns the Type field value
-func (o *CheckStatusWidgetDefinition) GetType() string {
+func (o *CheckStatusWidgetDefinition) GetType() CheckStatusWidgetDefinitionType {
 	if o == nil {
-		var ret string
+		var ret CheckStatusWidgetDefinitionType
 		return ret
 	}
 
@@ -339,7 +338,7 @@ func (o *CheckStatusWidgetDefinition) GetType() string {
 
 // GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
-func (o *CheckStatusWidgetDefinition) GetTypeOk() (*string, bool) {
+func (o *CheckStatusWidgetDefinition) GetTypeOk() (*CheckStatusWidgetDefinitionType, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -347,7 +346,7 @@ func (o *CheckStatusWidgetDefinition) GetTypeOk() (*string, bool) {
 }
 
 // SetType sets field value
-func (o *CheckStatusWidgetDefinition) SetType(v string) {
+func (o *CheckStatusWidgetDefinition) SetType(v CheckStatusWidgetDefinitionType) {
 	o.Type = v
 }
 
@@ -384,11 +383,6 @@ func (o CheckStatusWidgetDefinition) MarshalJSON() ([]byte, error) {
 		toSerialize["type"] = o.Type
 	}
 	return json.Marshal(toSerialize)
-}
-
-// AsWidgetDefinition wraps this instance of CheckStatusWidgetDefinition in WidgetDefinition
-func (s *CheckStatusWidgetDefinition) AsWidgetDefinition() WidgetDefinition {
-	return WidgetDefinition{WidgetDefinitionInterface: s}
 }
 
 type NullableCheckStatusWidgetDefinition struct {

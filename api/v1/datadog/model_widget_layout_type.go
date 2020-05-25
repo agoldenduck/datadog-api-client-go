@@ -12,13 +12,34 @@ import (
 	"encoding/json"
 )
 
-// WidgetLayoutType Layout type of the group
+import (
+	"fmt"
+)
+
+// WidgetLayoutType Layout type of the group.
 type WidgetLayoutType string
 
 // List of WidgetLayoutType
 const (
 	WIDGETLAYOUTTYPE_ORDERED WidgetLayoutType = "ordered"
 )
+
+func (v *WidgetLayoutType) UnmarshalJSON(src []byte) error {
+	var value string
+	err := json.Unmarshal(src, &value)
+	if err != nil {
+		return err
+	}
+	enumTypeValue := WidgetLayoutType(value)
+	for _, existing := range []WidgetLayoutType{"ordered"} {
+		if existing == enumTypeValue {
+			*v = enumTypeValue
+			return nil
+		}
+	}
+
+	return fmt.Errorf("%+v is not a valid WidgetLayoutType", *v)
+}
 
 // Ptr returns reference to WidgetLayoutType value
 func (v WidgetLayoutType) Ptr() *WidgetLayoutType {

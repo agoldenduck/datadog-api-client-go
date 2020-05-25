@@ -4,24 +4,25 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Columns** | Pointer to **[]string** | Which columns to display on the widget | [optional] 
-**Indexes** | Pointer to **[]string** | An array of index names to query in the stream. | [optional] 
+**Columns** | Pointer to **[]string** | Which columns to display on the widget. | [optional] 
+**Indexes** | Pointer to **[]string** | An array of index names to query in the stream. Use [] to query all indexes at once. | [optional] 
+**Logset** | Pointer to **string** | ID of the log set to use. | [optional] 
 **MessageDisplay** | Pointer to [**WidgetMessageDisplay**](WidgetMessageDisplay.md) |  | [optional] 
-**Query** | Pointer to **string** | Query to filter the log stream with | [optional] 
+**Query** | Pointer to **string** | Query to filter the log stream with. | [optional] 
 **ShowDateColumn** | Pointer to **bool** | Whether to show the date column or not | [optional] 
 **ShowMessageColumn** | Pointer to **bool** | Whether to show the message column or not | [optional] 
 **Sort** | Pointer to [**WidgetFieldSort**](WidgetFieldSort.md) |  | [optional] 
 **Time** | Pointer to [**WidgetTime**](WidgetTime.md) |  | [optional] 
-**Title** | Pointer to **string** | Title of the widget | [optional] 
+**Title** | Pointer to **string** | Title of the widget. | [optional] 
 **TitleAlign** | Pointer to [**WidgetTextAlign**](WidgetTextAlign.md) |  | [optional] 
-**TitleSize** | Pointer to **string** | Size of the title | [optional] 
-**Type** | Pointer to **string** | Type of the widget | [readonly] [default to "log_stream"]
+**TitleSize** | Pointer to **string** | Size of the title. | [optional] 
+**Type** | Pointer to [**LogStreamWidgetDefinitionType**](LogStreamWidgetDefinitionType.md) |  | [default to "log_stream"]
 
 ## Methods
 
 ### NewLogStreamWidgetDefinition
 
-`func NewLogStreamWidgetDefinition(type_ string, ) *LogStreamWidgetDefinition`
+`func NewLogStreamWidgetDefinition(type_ LogStreamWidgetDefinitionType, ) *LogStreamWidgetDefinition`
 
 NewLogStreamWidgetDefinition instantiates a new LogStreamWidgetDefinition object
 This constructor will assign default values to properties that have it defined,
@@ -85,6 +86,31 @@ SetIndexes sets Indexes field to given value.
 `func (o *LogStreamWidgetDefinition) HasIndexes() bool`
 
 HasIndexes returns a boolean if a field has been set.
+
+### GetLogset
+
+`func (o *LogStreamWidgetDefinition) GetLogset() string`
+
+GetLogset returns the Logset field if non-nil, zero value otherwise.
+
+### GetLogsetOk
+
+`func (o *LogStreamWidgetDefinition) GetLogsetOk() (*string, bool)`
+
+GetLogsetOk returns a tuple with the Logset field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetLogset
+
+`func (o *LogStreamWidgetDefinition) SetLogset(v string)`
+
+SetLogset sets Logset field to given value.
+
+### HasLogset
+
+`func (o *LogStreamWidgetDefinition) HasLogset() bool`
+
+HasLogset returns a boolean if a field has been set.
 
 ### GetMessageDisplay
 
@@ -313,30 +339,24 @@ HasTitleSize returns a boolean if a field has been set.
 
 ### GetType
 
-`func (o *LogStreamWidgetDefinition) GetType() string`
+`func (o *LogStreamWidgetDefinition) GetType() LogStreamWidgetDefinitionType`
 
 GetType returns the Type field if non-nil, zero value otherwise.
 
 ### GetTypeOk
 
-`func (o *LogStreamWidgetDefinition) GetTypeOk() (*string, bool)`
+`func (o *LogStreamWidgetDefinition) GetTypeOk() (*LogStreamWidgetDefinitionType, bool)`
 
 GetTypeOk returns a tuple with the Type field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetType
 
-`func (o *LogStreamWidgetDefinition) SetType(v string)`
+`func (o *LogStreamWidgetDefinition) SetType(v LogStreamWidgetDefinitionType)`
 
 SetType sets Type field to given value.
 
 
-
-### AsWidgetDefinition
-
-`func (s *LogStreamWidgetDefinition) AsWidgetDefinition() WidgetDefinition`
-
-Convenience method to wrap this instance of LogStreamWidgetDefinition in WidgetDefinition
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

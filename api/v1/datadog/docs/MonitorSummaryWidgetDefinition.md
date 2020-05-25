@@ -5,22 +5,24 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **ColorPreference** | Pointer to [**WidgetColorPreference**](WidgetColorPreference.md) |  | [optional] 
+**Count** | Pointer to **int64** | The number of monitors to display. | [optional] 
 **DisplayFormat** | Pointer to [**WidgetMonitorSummaryDisplayFormat**](WidgetMonitorSummaryDisplayFormat.md) |  | [optional] 
-**HideZeroCounts** | Pointer to **bool** | Whether to show counts of 0 or not | [optional] 
-**Query** | Pointer to **string** | Query to filter the monitors with | 
-**ShowLastTriggered** | Pointer to **bool** | Whether to show the time that has elapsed since the monitor/group triggered | [optional] 
+**HideZeroCounts** | Pointer to **bool** | Whether to show counts of 0 or not. | [optional] 
+**Query** | Pointer to **string** | Query to filter the monitors with. | 
+**ShowLastTriggered** | Pointer to **bool** | Whether to show the time that has elapsed since the monitor/group triggered. | [optional] 
 **Sort** | Pointer to [**WidgetSort**](WidgetSort.md) |  | [optional] 
+**Start** | Pointer to **int64** | The start of the list. Typically 0. | [optional] 
 **SummaryType** | Pointer to [**WidgetSummaryType**](WidgetSummaryType.md) |  | [optional] 
-**Title** | Pointer to **string** | Title of the widget | [optional] 
+**Title** | Pointer to **string** | Title of the widget. | [optional] 
 **TitleAlign** | Pointer to [**WidgetTextAlign**](WidgetTextAlign.md) |  | [optional] 
-**TitleSize** | Pointer to **string** | Size of the title | [optional] 
-**Type** | Pointer to **string** | Type of the widget | [readonly] [default to "manage_status"]
+**TitleSize** | Pointer to **string** | Size of the title. | [optional] 
+**Type** | Pointer to [**MonitorSummaryWidgetDefinitionType**](MonitorSummaryWidgetDefinitionType.md) |  | [default to "manage_status"]
 
 ## Methods
 
 ### NewMonitorSummaryWidgetDefinition
 
-`func NewMonitorSummaryWidgetDefinition(query string, type_ string, ) *MonitorSummaryWidgetDefinition`
+`func NewMonitorSummaryWidgetDefinition(query string, type_ MonitorSummaryWidgetDefinitionType, ) *MonitorSummaryWidgetDefinition`
 
 NewMonitorSummaryWidgetDefinition instantiates a new MonitorSummaryWidgetDefinition object
 This constructor will assign default values to properties that have it defined,
@@ -59,6 +61,31 @@ SetColorPreference sets ColorPreference field to given value.
 `func (o *MonitorSummaryWidgetDefinition) HasColorPreference() bool`
 
 HasColorPreference returns a boolean if a field has been set.
+
+### GetCount
+
+`func (o *MonitorSummaryWidgetDefinition) GetCount() int64`
+
+GetCount returns the Count field if non-nil, zero value otherwise.
+
+### GetCountOk
+
+`func (o *MonitorSummaryWidgetDefinition) GetCountOk() (*int64, bool)`
+
+GetCountOk returns a tuple with the Count field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetCount
+
+`func (o *MonitorSummaryWidgetDefinition) SetCount(v int64)`
+
+SetCount sets Count field to given value.
+
+### HasCount
+
+`func (o *MonitorSummaryWidgetDefinition) HasCount() bool`
+
+HasCount returns a boolean if a field has been set.
 
 ### GetDisplayFormat
 
@@ -180,6 +207,31 @@ SetSort sets Sort field to given value.
 
 HasSort returns a boolean if a field has been set.
 
+### GetStart
+
+`func (o *MonitorSummaryWidgetDefinition) GetStart() int64`
+
+GetStart returns the Start field if non-nil, zero value otherwise.
+
+### GetStartOk
+
+`func (o *MonitorSummaryWidgetDefinition) GetStartOk() (*int64, bool)`
+
+GetStartOk returns a tuple with the Start field if it's non-nil, zero value otherwise
+and a boolean to check if the value has been set.
+
+### SetStart
+
+`func (o *MonitorSummaryWidgetDefinition) SetStart(v int64)`
+
+SetStart sets Start field to given value.
+
+### HasStart
+
+`func (o *MonitorSummaryWidgetDefinition) HasStart() bool`
+
+HasStart returns a boolean if a field has been set.
+
 ### GetSummaryType
 
 `func (o *MonitorSummaryWidgetDefinition) GetSummaryType() WidgetSummaryType`
@@ -282,30 +334,24 @@ HasTitleSize returns a boolean if a field has been set.
 
 ### GetType
 
-`func (o *MonitorSummaryWidgetDefinition) GetType() string`
+`func (o *MonitorSummaryWidgetDefinition) GetType() MonitorSummaryWidgetDefinitionType`
 
 GetType returns the Type field if non-nil, zero value otherwise.
 
 ### GetTypeOk
 
-`func (o *MonitorSummaryWidgetDefinition) GetTypeOk() (*string, bool)`
+`func (o *MonitorSummaryWidgetDefinition) GetTypeOk() (*MonitorSummaryWidgetDefinitionType, bool)`
 
 GetTypeOk returns a tuple with the Type field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetType
 
-`func (o *MonitorSummaryWidgetDefinition) SetType(v string)`
+`func (o *MonitorSummaryWidgetDefinition) SetType(v MonitorSummaryWidgetDefinitionType)`
 
 SetType sets Type field to given value.
 
 
-
-### AsWidgetDefinition
-
-`func (s *MonitorSummaryWidgetDefinition) AsWidgetDefinition() WidgetDefinition`
-
-Convenience method to wrap this instance of MonitorSummaryWidgetDefinition in WidgetDefinition
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

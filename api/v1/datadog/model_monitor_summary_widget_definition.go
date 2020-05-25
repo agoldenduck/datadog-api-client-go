@@ -12,32 +12,35 @@ import (
 	"encoding/json"
 )
 
-// MonitorSummaryWidgetDefinition The monitor summary widget displays a summary view of all your Datadog monitors, or a subset based on a query. Only available on FREE layout dashboards
+// MonitorSummaryWidgetDefinition The monitor summary widget displays a summary view of all your Datadog monitors, or a subset based on a query. Only available on FREE layout dashboards.
 type MonitorSummaryWidgetDefinition struct {
-	ColorPreference *WidgetColorPreference             `json:"color_preference,omitempty"`
-	DisplayFormat   *WidgetMonitorSummaryDisplayFormat `json:"display_format,omitempty"`
-	// Whether to show counts of 0 or not
+	ColorPreference *WidgetColorPreference `json:"color_preference,omitempty"`
+	// The number of monitors to display.
+	Count         *int64                             `json:"count,omitempty"`
+	DisplayFormat *WidgetMonitorSummaryDisplayFormat `json:"display_format,omitempty"`
+	// Whether to show counts of 0 or not.
 	HideZeroCounts *bool `json:"hide_zero_counts,omitempty"`
-	// Query to filter the monitors with
+	// Query to filter the monitors with.
 	Query string `json:"query"`
-	// Whether to show the time that has elapsed since the monitor/group triggered
-	ShowLastTriggered *bool              `json:"show_last_triggered,omitempty"`
-	Sort              *WidgetSort        `json:"sort,omitempty"`
-	SummaryType       *WidgetSummaryType `json:"summary_type,omitempty"`
-	// Title of the widget
+	// Whether to show the time that has elapsed since the monitor/group triggered.
+	ShowLastTriggered *bool       `json:"show_last_triggered,omitempty"`
+	Sort              *WidgetSort `json:"sort,omitempty"`
+	// The start of the list. Typically 0.
+	Start       *int64             `json:"start,omitempty"`
+	SummaryType *WidgetSummaryType `json:"summary_type,omitempty"`
+	// Title of the widget.
 	Title      *string          `json:"title,omitempty"`
 	TitleAlign *WidgetTextAlign `json:"title_align,omitempty"`
-	// Size of the title
-	TitleSize *string `json:"title_size,omitempty"`
-	// Type of the widget
-	Type string `json:"type"`
+	// Size of the title.
+	TitleSize *string                            `json:"title_size,omitempty"`
+	Type      MonitorSummaryWidgetDefinitionType `json:"type"`
 }
 
 // NewMonitorSummaryWidgetDefinition instantiates a new MonitorSummaryWidgetDefinition object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewMonitorSummaryWidgetDefinition(query string, type_ string) *MonitorSummaryWidgetDefinition {
+func NewMonitorSummaryWidgetDefinition(query string, type_ MonitorSummaryWidgetDefinitionType) *MonitorSummaryWidgetDefinition {
 	this := MonitorSummaryWidgetDefinition{}
 	this.Query = query
 	this.Type = type_
@@ -49,7 +52,7 @@ func NewMonitorSummaryWidgetDefinition(query string, type_ string) *MonitorSumma
 // but it doesn't guarantee that properties required by API are set
 func NewMonitorSummaryWidgetDefinitionWithDefaults() *MonitorSummaryWidgetDefinition {
 	this := MonitorSummaryWidgetDefinition{}
-	var type_ string = "manage_status"
+	var type_ MonitorSummaryWidgetDefinitionType = "manage_status"
 	this.Type = type_
 	return &this
 }
@@ -84,6 +87,38 @@ func (o *MonitorSummaryWidgetDefinition) HasColorPreference() bool {
 // SetColorPreference gets a reference to the given WidgetColorPreference and assigns it to the ColorPreference field.
 func (o *MonitorSummaryWidgetDefinition) SetColorPreference(v WidgetColorPreference) {
 	o.ColorPreference = &v
+}
+
+// GetCount returns the Count field value if set, zero value otherwise.
+func (o *MonitorSummaryWidgetDefinition) GetCount() int64 {
+	if o == nil || o.Count == nil {
+		var ret int64
+		return ret
+	}
+	return *o.Count
+}
+
+// GetCountOk returns a tuple with the Count field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *MonitorSummaryWidgetDefinition) GetCountOk() (*int64, bool) {
+	if o == nil || o.Count == nil {
+		return nil, false
+	}
+	return o.Count, true
+}
+
+// HasCount returns a boolean if a field has been set.
+func (o *MonitorSummaryWidgetDefinition) HasCount() bool {
+	if o != nil && o.Count != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetCount gets a reference to the given int64 and assigns it to the Count field.
+func (o *MonitorSummaryWidgetDefinition) SetCount(v int64) {
+	o.Count = &v
 }
 
 // GetDisplayFormat returns the DisplayFormat field value if set, zero value otherwise.
@@ -238,6 +273,38 @@ func (o *MonitorSummaryWidgetDefinition) SetSort(v WidgetSort) {
 	o.Sort = &v
 }
 
+// GetStart returns the Start field value if set, zero value otherwise.
+func (o *MonitorSummaryWidgetDefinition) GetStart() int64 {
+	if o == nil || o.Start == nil {
+		var ret int64
+		return ret
+	}
+	return *o.Start
+}
+
+// GetStartOk returns a tuple with the Start field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *MonitorSummaryWidgetDefinition) GetStartOk() (*int64, bool) {
+	if o == nil || o.Start == nil {
+		return nil, false
+	}
+	return o.Start, true
+}
+
+// HasStart returns a boolean if a field has been set.
+func (o *MonitorSummaryWidgetDefinition) HasStart() bool {
+	if o != nil && o.Start != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetStart gets a reference to the given int64 and assigns it to the Start field.
+func (o *MonitorSummaryWidgetDefinition) SetStart(v int64) {
+	o.Start = &v
+}
+
 // GetSummaryType returns the SummaryType field value if set, zero value otherwise.
 func (o *MonitorSummaryWidgetDefinition) GetSummaryType() WidgetSummaryType {
 	if o == nil || o.SummaryType == nil {
@@ -367,9 +434,9 @@ func (o *MonitorSummaryWidgetDefinition) SetTitleSize(v string) {
 }
 
 // GetType returns the Type field value
-func (o *MonitorSummaryWidgetDefinition) GetType() string {
+func (o *MonitorSummaryWidgetDefinition) GetType() MonitorSummaryWidgetDefinitionType {
 	if o == nil {
-		var ret string
+		var ret MonitorSummaryWidgetDefinitionType
 		return ret
 	}
 
@@ -378,7 +445,7 @@ func (o *MonitorSummaryWidgetDefinition) GetType() string {
 
 // GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
-func (o *MonitorSummaryWidgetDefinition) GetTypeOk() (*string, bool) {
+func (o *MonitorSummaryWidgetDefinition) GetTypeOk() (*MonitorSummaryWidgetDefinitionType, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -386,7 +453,7 @@ func (o *MonitorSummaryWidgetDefinition) GetTypeOk() (*string, bool) {
 }
 
 // SetType sets field value
-func (o *MonitorSummaryWidgetDefinition) SetType(v string) {
+func (o *MonitorSummaryWidgetDefinition) SetType(v MonitorSummaryWidgetDefinitionType) {
 	o.Type = v
 }
 
@@ -394,6 +461,9 @@ func (o MonitorSummaryWidgetDefinition) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if o.ColorPreference != nil {
 		toSerialize["color_preference"] = o.ColorPreference
+	}
+	if o.Count != nil {
+		toSerialize["count"] = o.Count
 	}
 	if o.DisplayFormat != nil {
 		toSerialize["display_format"] = o.DisplayFormat
@@ -409,6 +479,9 @@ func (o MonitorSummaryWidgetDefinition) MarshalJSON() ([]byte, error) {
 	}
 	if o.Sort != nil {
 		toSerialize["sort"] = o.Sort
+	}
+	if o.Start != nil {
+		toSerialize["start"] = o.Start
 	}
 	if o.SummaryType != nil {
 		toSerialize["summary_type"] = o.SummaryType
@@ -426,11 +499,6 @@ func (o MonitorSummaryWidgetDefinition) MarshalJSON() ([]byte, error) {
 		toSerialize["type"] = o.Type
 	}
 	return json.Marshal(toSerialize)
-}
-
-// AsWidgetDefinition wraps this instance of MonitorSummaryWidgetDefinition in WidgetDefinition
-func (s *MonitorSummaryWidgetDefinition) AsWidgetDefinition() WidgetDefinition {
-	return WidgetDefinition{WidgetDefinitionInterface: s}
 }
 
 type NullableMonitorSummaryWidgetDefinition struct {

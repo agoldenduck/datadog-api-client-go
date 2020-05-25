@@ -12,7 +12,11 @@ import (
 	"encoding/json"
 )
 
-// WidgetTextAlign How to align the text on the widget
+import (
+	"fmt"
+)
+
+// WidgetTextAlign How to align the text on the widget.
 type WidgetTextAlign string
 
 // List of WidgetTextAlign
@@ -21,6 +25,23 @@ const (
 	WIDGETTEXTALIGN_LEFT   WidgetTextAlign = "left"
 	WIDGETTEXTALIGN_RIGHT  WidgetTextAlign = "right"
 )
+
+func (v *WidgetTextAlign) UnmarshalJSON(src []byte) error {
+	var value string
+	err := json.Unmarshal(src, &value)
+	if err != nil {
+		return err
+	}
+	enumTypeValue := WidgetTextAlign(value)
+	for _, existing := range []WidgetTextAlign{"center", "left", "right"} {
+		if existing == enumTypeValue {
+			*v = enumTypeValue
+			return nil
+		}
+	}
+
+	return fmt.Errorf("%+v is not a valid WidgetTextAlign", *v)
+}
 
 // Ptr returns reference to WidgetTextAlign value
 func (v WidgetTextAlign) Ptr() *WidgetTextAlign {

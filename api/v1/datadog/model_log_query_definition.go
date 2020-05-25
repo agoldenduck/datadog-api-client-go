@@ -12,14 +12,14 @@ import (
 	"encoding/json"
 )
 
-// LogQueryDefinition TODO.
+// LogQueryDefinition List of logs.
 type LogQueryDefinition struct {
 	Compute *LogsQueryCompute `json:"compute,omitempty"`
-	// TODO.
+	// List of tag prefixes to group by in the case of a cluster check.
 	GroupBy *[]LogQueryDefinitionGroupBy `json:"group_by,omitempty"`
-	// TODO.
+	// A coma separated-list of index names. Use \"*\" query all indexes at once. [Multiple Indexes](https://docs.datadoghq.com/logs/indexes/#multiple-indexes)
 	Index *string `json:"index,omitempty"`
-	// This field is mutually exclusive with `compute`
+	// This field is mutually exclusive with `compute`.
 	MultiCompute *[]LogsQueryCompute       `json:"multi_compute,omitempty"`
 	Search       *LogQueryDefinitionSearch `json:"search,omitempty"`
 }

@@ -12,7 +12,11 @@ import (
 	"encoding/json"
 )
 
-// SyntheticsStepType TODO.
+import (
+	"fmt"
+)
+
+// SyntheticsStepType Step type used in your Synthetic test.
 type SyntheticsStepType string
 
 // List of SyntheticsStepType
@@ -37,6 +41,23 @@ const (
 	SYNTHETICSSTEPTYPE_UPLOAD_FILES              SyntheticsStepType = "uploadFiles"
 	SYNTHETICSSTEPTYPE_WAIT                      SyntheticsStepType = "wait"
 )
+
+func (v *SyntheticsStepType) UnmarshalJSON(src []byte) error {
+	var value string
+	err := json.Unmarshal(src, &value)
+	if err != nil {
+		return err
+	}
+	enumTypeValue := SyntheticsStepType(value)
+	for _, existing := range []SyntheticsStepType{"assertCurrentUrl", "assertElementContent", "assertElementPresent", "assertEmail", "assertPageContains", "assertPageLacks", "click", "extractVariable", "goToEmailLink", "goToUrl", "goToUrlAndMeasureTti", "hover", "playSubTest", "pressKey", "refresh", "selectOption", "typeText", "uploadFiles", "wait"} {
+		if existing == enumTypeValue {
+			*v = enumTypeValue
+			return nil
+		}
+	}
+
+	return fmt.Errorf("%+v is not a valid SyntheticsStepType", *v)
+}
 
 // Ptr returns reference to SyntheticsStepType value
 func (v SyntheticsStepType) Ptr() *SyntheticsStepType {

@@ -4,12 +4,12 @@ All URIs are relative to *https://api.datadoghq.com*
 
 Method | HTTP request | Description
 ------------- | ------------- | -------------
-[**CreateUser**](UsersApi.md#CreateUser) | **Post** /api/v2/users | Create user
-[**DisableUser**](UsersApi.md#DisableUser) | **Delete** /api/v2/users/{user_id} | Disable user
+[**CreateUser**](UsersApi.md#CreateUser) | **Post** /api/v2/users | Create a user
+[**DisableUser**](UsersApi.md#DisableUser) | **Delete** /api/v2/users/{user_id} | Disable a user
 [**GetInvitation**](UsersApi.md#GetInvitation) | **Get** /api/v2/user_invitations/{user_invitation_uuid} | Get a user invitation
 [**GetUser**](UsersApi.md#GetUser) | **Get** /api/v2/users/{user_id} | Get a user
-[**GetUserOrganization**](UsersApi.md#GetUserOrganization) | **Get** /api/v2/users/{user_id}/orgs | Get a user organization
-[**GetUserPermissions**](UsersApi.md#GetUserPermissions) | **Get** /api/v2/users/{user_id}/permissions | Get a user permissions
+[**ListUserOrganizations**](UsersApi.md#ListUserOrganizations) | **Get** /api/v2/users/{user_id}/orgs | Get a user organization
+[**ListUserPermissions**](UsersApi.md#ListUserPermissions) | **Get** /api/v2/users/{user_id}/permissions | Get a user permissions
 [**ListUsers**](UsersApi.md#ListUsers) | **Get** /api/v2/users | List all users
 [**SendInvitations**](UsersApi.md#SendInvitations) | **Post** /api/v2/user_invitations | Send invitation emails
 [**UpdateUser**](UsersApi.md#UpdateUser) | **Patch** /api/v2/users/{user_id} | Update a user
@@ -18,11 +18,51 @@ Method | HTTP request | Description
 
 ## CreateUser
 
-> UserResponsePayload CreateUser(ctx).Body(body).Execute()
+> UserResponse CreateUser(ctx).Body(body).Execute()
 
-Create user
+Create a user
 
 
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    datadog "github.com/DataDog/datadog-api-client-go/api/v2/datadog"
+)
+
+func main() {
+    ctx := context.WithValue(
+        context.Background(),
+        datadog.ContextAPIKeys,
+        map[string]datadog.APIKey{
+            "apiKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_API_KEY"),
+            },
+            "appKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_APP_KEY"),
+            },
+        },
+    )
+
+    body := datadog.UserCreatePayload{Data: datadog.UserCreateData{Attributes: datadog.UserCreateAttributes{Email: "Email_example", Name: "Name_example", Title: "Title_example"}, Relationships: datadog.UserRelationships{Roles: datadog.RelationshipToRoles{Data: []RelationshipToRoleData{datadog.RelationshipToRoleData{Id: "Id_example", Type: datadog.RolesType{}})}}, Type: datadog.UsersType{}}} // UserCreatePayload |  (optional)
+
+    configuration := datadog.NewConfiguration()
+    api_client := datadog.NewAPIClient(configuration)
+    resp, r, err := api_client.UsersApi.CreateUser(ctx).Body(body).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `UsersApi.CreateUser``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `CreateUser`: UserResponse
+    fmt.Fprintf(os.Stdout, "Response from `UsersApi.CreateUser`: %v\n", resp)
+}
+```
 
 ### Path Parameters
 
@@ -39,7 +79,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**UserResponsePayload**](UserResponsePayload.md)
+[**UserResponse**](UserResponse.md)
 
 ### Authorization
 
@@ -59,9 +99,47 @@ Name | Type | Description  | Notes
 
 > DisableUser(ctx, userId).Execute()
 
-Disable user
+Disable a user
 
 
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    datadog "github.com/DataDog/datadog-api-client-go/api/v2/datadog"
+)
+
+func main() {
+    ctx := context.WithValue(
+        context.Background(),
+        datadog.ContextAPIKeys,
+        map[string]datadog.APIKey{
+            "apiKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_API_KEY"),
+            },
+            "appKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_APP_KEY"),
+            },
+        },
+    )
+
+    userId := "userId_example" // string | The ID of the user.
+
+    configuration := datadog.NewConfiguration()
+    api_client := datadog.NewAPIClient(configuration)
+    resp, r, err := api_client.UsersApi.DisableUser(ctx, userId).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `UsersApi.DisableUser``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+}
+```
 
 ### Path Parameters
 
@@ -106,6 +184,46 @@ Get a user invitation
 
 
 
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    datadog "github.com/DataDog/datadog-api-client-go/api/v2/datadog"
+)
+
+func main() {
+    ctx := context.WithValue(
+        context.Background(),
+        datadog.ContextAPIKeys,
+        map[string]datadog.APIKey{
+            "apiKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_API_KEY"),
+            },
+            "appKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_APP_KEY"),
+            },
+        },
+    )
+
+    userInvitationUuid := "userInvitationUuid_example" // string | The UUID of the user invitation.
+
+    configuration := datadog.NewConfiguration()
+    api_client := datadog.NewAPIClient(configuration)
+    resp, r, err := api_client.UsersApi.GetInvitation(ctx, userInvitationUuid).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `UsersApi.GetInvitation``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `GetInvitation`: UserInvitationResponse
+    fmt.Fprintf(os.Stdout, "Response from `UsersApi.GetInvitation`: %v\n", resp)
+}
+```
+
 ### Path Parameters
 
 
@@ -143,11 +261,51 @@ Name | Type | Description  | Notes
 
 ## GetUser
 
-> UserResponsePayload GetUser(ctx, userId).Execute()
+> UserResponse GetUser(ctx, userId).Execute()
 
 Get a user
 
 
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    datadog "github.com/DataDog/datadog-api-client-go/api/v2/datadog"
+)
+
+func main() {
+    ctx := context.WithValue(
+        context.Background(),
+        datadog.ContextAPIKeys,
+        map[string]datadog.APIKey{
+            "apiKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_API_KEY"),
+            },
+            "appKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_APP_KEY"),
+            },
+        },
+    )
+
+    userId := "userId_example" // string | The ID of the user.
+
+    configuration := datadog.NewConfiguration()
+    api_client := datadog.NewAPIClient(configuration)
+    resp, r, err := api_client.UsersApi.GetUser(ctx, userId).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `UsersApi.GetUser``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `GetUser`: UserResponse
+    fmt.Fprintf(os.Stdout, "Response from `UsersApi.GetUser`: %v\n", resp)
+}
+```
 
 ### Path Parameters
 
@@ -168,7 +326,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**UserResponsePayload**](UserResponsePayload.md)
+[**UserResponse**](UserResponse.md)
 
 ### Authorization
 
@@ -184,14 +342,54 @@ Name | Type | Description  | Notes
 [[Back to README]](../README.md)
 
 
-## GetUserOrganization
+## ListUserOrganizations
 
-> UserResponsePayload GetUserOrganization(ctx, userId).Execute()
+> UserResponse ListUserOrganizations(ctx, userId).Execute()
 
 Get a user organization
 
 
 
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    datadog "github.com/DataDog/datadog-api-client-go/api/v2/datadog"
+)
+
+func main() {
+    ctx := context.WithValue(
+        context.Background(),
+        datadog.ContextAPIKeys,
+        map[string]datadog.APIKey{
+            "apiKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_API_KEY"),
+            },
+            "appKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_APP_KEY"),
+            },
+        },
+    )
+
+    userId := "userId_example" // string | The ID of the user.
+
+    configuration := datadog.NewConfiguration()
+    api_client := datadog.NewAPIClient(configuration)
+    resp, r, err := api_client.UsersApi.ListUserOrganizations(ctx, userId).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `UsersApi.ListUserOrganizations``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `ListUserOrganizations`: UserResponse
+    fmt.Fprintf(os.Stdout, "Response from `UsersApi.ListUserOrganizations`: %v\n", resp)
+}
+```
+
 ### Path Parameters
 
 
@@ -202,7 +400,7 @@ Name | Type | Description  | Notes
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiGetUserOrganizationRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiListUserOrganizationsRequest struct via the builder pattern
 
 
 Name | Type | Description  | Notes
@@ -211,7 +409,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**UserResponsePayload**](UserResponsePayload.md)
+[**UserResponse**](UserResponse.md)
 
 ### Authorization
 
@@ -227,13 +425,53 @@ Name | Type | Description  | Notes
 [[Back to README]](../README.md)
 
 
-## GetUserPermissions
+## ListUserPermissions
 
-> Permissions GetUserPermissions(ctx, userId).Execute()
+> PermissionsResponse ListUserPermissions(ctx, userId).Execute()
 
 Get a user permissions
 
 
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    datadog "github.com/DataDog/datadog-api-client-go/api/v2/datadog"
+)
+
+func main() {
+    ctx := context.WithValue(
+        context.Background(),
+        datadog.ContextAPIKeys,
+        map[string]datadog.APIKey{
+            "apiKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_API_KEY"),
+            },
+            "appKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_APP_KEY"),
+            },
+        },
+    )
+
+    userId := "userId_example" // string | The ID of the user.
+
+    configuration := datadog.NewConfiguration()
+    api_client := datadog.NewAPIClient(configuration)
+    resp, r, err := api_client.UsersApi.ListUserPermissions(ctx, userId).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `UsersApi.ListUserPermissions``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `ListUserPermissions`: PermissionsResponse
+    fmt.Fprintf(os.Stdout, "Response from `UsersApi.ListUserPermissions`: %v\n", resp)
+}
+```
 
 ### Path Parameters
 
@@ -245,7 +483,7 @@ Name | Type | Description  | Notes
 
 ### Other Parameters
 
-Other parameters are passed through a pointer to a apiGetUserPermissionsRequest struct via the builder pattern
+Other parameters are passed through a pointer to a apiListUserPermissionsRequest struct via the builder pattern
 
 
 Name | Type | Description  | Notes
@@ -254,7 +492,7 @@ Name | Type | Description  | Notes
 
 ### Return type
 
-[**Permissions**](Permissions.md)
+[**PermissionsResponse**](PermissionsResponse.md)
 
 ### Authorization
 
@@ -272,11 +510,56 @@ Name | Type | Description  | Notes
 
 ## ListUsers
 
-> UsersResponsePayload ListUsers(ctx).PageSize(pageSize).PageNumber(pageNumber).Sort(sort).SortDir(sortDir).Filter(filter).FilterStatus(filterStatus).Execute()
+> UsersResponse ListUsers(ctx).PageSize(pageSize).PageNumber(pageNumber).Sort(sort).SortDir(sortDir).Filter(filter).FilterStatus(filterStatus).Execute()
 
 List all users
 
 
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    datadog "github.com/DataDog/datadog-api-client-go/api/v2/datadog"
+)
+
+func main() {
+    ctx := context.WithValue(
+        context.Background(),
+        datadog.ContextAPIKeys,
+        map[string]datadog.APIKey{
+            "apiKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_API_KEY"),
+            },
+            "appKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_APP_KEY"),
+            },
+        },
+    )
+
+    pageSize := 987 // int64 | Size for a given page. (optional) (default to 10)
+    pageNumber := 987 // int64 | Specific page number to return. (optional) (default to 0)
+    sort := "sort_example" // string | User attribute to order results by. Sort order is ascending by default. Sort order is descending if the field is prefixed by a negative sign, for example `sort=-name`. Options: `name`, `modified_at`, `user_count`. (optional) (default to "name")
+    sortDir := datadog.QuerySortOrder{} // QuerySortOrder | Direction of sort. Options: `asc`, `desc`. (optional) (default to "desc")
+    filter := "filter_example" // string | Filter all users by the given string. Defaults to no filtering. (optional)
+    filterStatus := "filterStatus_example" // string | Filter on status attribute. Comma separated list, with possible values `Active`, `Pending`, and `Disabled`. Defaults to no filtering. (optional)
+
+    configuration := datadog.NewConfiguration()
+    api_client := datadog.NewAPIClient(configuration)
+    resp, r, err := api_client.UsersApi.ListUsers(ctx).PageSize(pageSize).PageNumber(pageNumber).Sort(sort).SortDir(sortDir).Filter(filter).FilterStatus(filterStatus).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `UsersApi.ListUsers``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `ListUsers`: UsersResponse
+    fmt.Fprintf(os.Stdout, "Response from `UsersApi.ListUsers`: %v\n", resp)
+}
+```
 
 ### Path Parameters
 
@@ -289,16 +572,16 @@ Other parameters are passed through a pointer to a apiListUsersRequest struct vi
 
 Name | Type | Description  | Notes
 ------------- | ------------- | ------------- | -------------
- **pageSize** | **int64** | Number of users to return for a given page. | [default to 10]
+ **pageSize** | **int64** | Size for a given page. | [default to 10]
  **pageNumber** | **int64** | Specific page number to return. | [default to 0]
  **sort** | **string** | User attribute to order results by. Sort order is ascending by default. Sort order is descending if the field is prefixed by a negative sign, for example &#x60;sort&#x3D;-name&#x60;. Options: &#x60;name&#x60;, &#x60;modified_at&#x60;, &#x60;user_count&#x60;. | [default to &quot;name&quot;]
  **sortDir** | [**QuerySortOrder**](.md) | Direction of sort. Options: &#x60;asc&#x60;, &#x60;desc&#x60;. | [default to &quot;desc&quot;]
  **filter** | **string** | Filter all users by the given string. Defaults to no filtering. | 
- **filterStatus** | **string** | Filter on status attribute. Comma separated list: Active, Pending, and Disabled. Defaults to no filtering. | 
+ **filterStatus** | **string** | Filter on status attribute. Comma separated list, with possible values &#x60;Active&#x60;, &#x60;Pending&#x60;, and &#x60;Disabled&#x60;. Defaults to no filtering. | 
 
 ### Return type
 
-[**UsersResponsePayload**](UsersResponsePayload.md)
+[**UsersResponse**](UsersResponse.md)
 
 ### Authorization
 
@@ -321,6 +604,46 @@ Name | Type | Description  | Notes
 Send invitation emails
 
 
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    datadog "github.com/DataDog/datadog-api-client-go/api/v2/datadog"
+)
+
+func main() {
+    ctx := context.WithValue(
+        context.Background(),
+        datadog.ContextAPIKeys,
+        map[string]datadog.APIKey{
+            "apiKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_API_KEY"),
+            },
+            "appKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_APP_KEY"),
+            },
+        },
+    )
+
+    body := datadog.UserInvitationPayload{Data: []UserInvitationData{datadog.UserInvitationData{Relationships: datadog.UserInvitationRelationships{User: datadog.RelationshipToUser{Data: datadog.RelationshipToUserData{Id: "Id_example", Type: "Type_example"}}}, Type: datadog.UserInvitationsType{}})} // UserInvitationPayload |  (optional)
+
+    configuration := datadog.NewConfiguration()
+    api_client := datadog.NewAPIClient(configuration)
+    resp, r, err := api_client.UsersApi.SendInvitations(ctx).Body(body).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `UsersApi.SendInvitations``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `SendInvitations`: UserInvitationsResponse
+    fmt.Fprintf(os.Stdout, "Response from `UsersApi.SendInvitations`: %v\n", resp)
+}
+```
 
 ### Path Parameters
 
@@ -360,6 +683,45 @@ Name | Type | Description  | Notes
 Update a user
 
 
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    datadog "github.com/DataDog/datadog-api-client-go/api/v2/datadog"
+)
+
+func main() {
+    ctx := context.WithValue(
+        context.Background(),
+        datadog.ContextAPIKeys,
+        map[string]datadog.APIKey{
+            "apiKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_API_KEY"),
+            },
+            "appKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_APP_KEY"),
+            },
+        },
+    )
+
+    userId := "userId_example" // string | The ID of the user.
+    body := datadog.UserUpdatePayload{Data: datadog.UserUpdateData{Attributes: datadog.UserUpdateAttributes{Disabled: false, Email: "Email_example", Name: "Name_example"}, Id: "Id_example", Type: datadog.UsersType{}}} // UserUpdatePayload |  (optional)
+
+    configuration := datadog.NewConfiguration()
+    api_client := datadog.NewAPIClient(configuration)
+    resp, r, err := api_client.UsersApi.UpdateUser(ctx, userId).Body(body).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `UsersApi.UpdateUser``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+}
+```
 
 ### Path Parameters
 

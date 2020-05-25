@@ -12,7 +12,11 @@ import (
 	"encoding/json"
 )
 
-// WidgetChangeType Show the absolute or the relative change; values available are absolute or relative
+import (
+	"fmt"
+)
+
+// WidgetChangeType Show the absolute or the relative change.
 type WidgetChangeType string
 
 // List of WidgetChangeType
@@ -20,6 +24,23 @@ const (
 	WIDGETCHANGETYPE_ABSOLUTE WidgetChangeType = "absolute"
 	WIDGETCHANGETYPE_RELATIVE WidgetChangeType = "relative"
 )
+
+func (v *WidgetChangeType) UnmarshalJSON(src []byte) error {
+	var value string
+	err := json.Unmarshal(src, &value)
+	if err != nil {
+		return err
+	}
+	enumTypeValue := WidgetChangeType(value)
+	for _, existing := range []WidgetChangeType{"absolute", "relative"} {
+		if existing == enumTypeValue {
+			*v = enumTypeValue
+			return nil
+		}
+	}
+
+	return fmt.Errorf("%+v is not a valid WidgetChangeType", *v)
+}
 
 // Ptr returns reference to WidgetChangeType value
 func (v WidgetChangeType) Ptr() *WidgetChangeType {

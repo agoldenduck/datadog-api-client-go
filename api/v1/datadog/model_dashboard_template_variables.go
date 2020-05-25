@@ -12,13 +12,13 @@ import (
 	"encoding/json"
 )
 
-// DashboardTemplateVariables TODO.
+// DashboardTemplateVariables Template variable.
 type DashboardTemplateVariables struct {
-	// TODO.
+	// The default value for the template variable on dashboard load.
 	Default NullableString `json:"default,omitempty"`
-	// TODO.
+	// The name of the variable.
 	Name string `json:"name"`
-	// TODO.
+	// The tag prefix associated with the variable. Only tags with this prefix appear in the variable drop-down.
 	Prefix NullableString `json:"prefix,omitempty"`
 }
 

@@ -77,12 +77,29 @@ Class | Method | HTTP request | Description
 *DashboardListsApi* | [**DeleteDashboardListItems**](docs/DashboardListsApi.md#deletedashboardlistitems) | **Delete** /api/v2/dashboard/lists/manual/{dashboard_list_id}/dashboards | Delete items from a dashboard list
 *DashboardListsApi* | [**GetDashboardListItems**](docs/DashboardListsApi.md#getdashboardlistitems) | **Get** /api/v2/dashboard/lists/manual/{dashboard_list_id}/dashboards | Get a Dashboard List
 *DashboardListsApi* | [**UpdateDashboardListItems**](docs/DashboardListsApi.md#updatedashboardlistitems) | **Put** /api/v2/dashboard/lists/manual/{dashboard_list_id}/dashboards | Update items of a dashboard list
-*UsersApi* | [**CreateUser**](docs/UsersApi.md#createuser) | **Post** /api/v2/users | Create user
-*UsersApi* | [**DisableUser**](docs/UsersApi.md#disableuser) | **Delete** /api/v2/users/{user_id} | Disable user
+*RolesApi* | [**AddPermissionToRole**](docs/RolesApi.md#addpermissiontorole) | **Post** /api/v2/roles/{role_id}/permissions | Grant permission to a role
+*RolesApi* | [**AddUserToRole**](docs/RolesApi.md#addusertorole) | **Post** /api/v2/roles/{role_id}/users | Add a user to a role
+*RolesApi* | [**CreateRole**](docs/RolesApi.md#createrole) | **Post** /api/v2/roles | Create role
+*RolesApi* | [**DeleteRole**](docs/RolesApi.md#deleterole) | **Delete** /api/v2/roles/{role_id} | Delete role
+*RolesApi* | [**GetRole**](docs/RolesApi.md#getrole) | **Get** /api/v2/roles/{role_id} | Get a role
+*RolesApi* | [**ListPermissions**](docs/RolesApi.md#listpermissions) | **Get** /api/v2/permissions | List permissions
+*RolesApi* | [**ListRolePermissions**](docs/RolesApi.md#listrolepermissions) | **Get** /api/v2/roles/{role_id}/permissions | List permissions for a role
+*RolesApi* | [**ListRoleUsers**](docs/RolesApi.md#listroleusers) | **Get** /api/v2/roles/{role_id}/users | Get all users of a role
+*RolesApi* | [**ListRoles**](docs/RolesApi.md#listroles) | **Get** /api/v2/roles | List roles
+*RolesApi* | [**RemovePermissionFromRole**](docs/RolesApi.md#removepermissionfromrole) | **Delete** /api/v2/roles/{role_id}/permissions | Revoke permission
+*RolesApi* | [**RemoveUserFromRole**](docs/RolesApi.md#removeuserfromrole) | **Delete** /api/v2/roles/{role_id}/users | Remove a user from a role
+*RolesApi* | [**UpdateRole**](docs/RolesApi.md#updaterole) | **Patch** /api/v2/roles/{role_id} | Update a role
+*SecurityMonitoringApi* | [**CreateSecurityMonitoringRule**](docs/SecurityMonitoringApi.md#createsecuritymonitoringrule) | **Post** /api/v2/security_monitoring/rules | Create a detection rule
+*SecurityMonitoringApi* | [**DeleteSecurityMonitoringRule**](docs/SecurityMonitoringApi.md#deletesecuritymonitoringrule) | **Delete** /api/v2/security_monitoring/rules/{rule_id} | Delete an existing rule
+*SecurityMonitoringApi* | [**GetSecurityMonitoringRule**](docs/SecurityMonitoringApi.md#getsecuritymonitoringrule) | **Get** /api/v2/security_monitoring/rules/{rule_id} | Get a rule&#39;s details
+*SecurityMonitoringApi* | [**ListSecurityMonitoringRules**](docs/SecurityMonitoringApi.md#listsecuritymonitoringrules) | **Get** /api/v2/security_monitoring/rules | List rules
+*SecurityMonitoringApi* | [**UpdateSecurityMonitoringRule**](docs/SecurityMonitoringApi.md#updatesecuritymonitoringrule) | **Put** /api/v2/security_monitoring/rules/{rule_id} | Update an existing rule
+*UsersApi* | [**CreateUser**](docs/UsersApi.md#createuser) | **Post** /api/v2/users | Create a user
+*UsersApi* | [**DisableUser**](docs/UsersApi.md#disableuser) | **Delete** /api/v2/users/{user_id} | Disable a user
 *UsersApi* | [**GetInvitation**](docs/UsersApi.md#getinvitation) | **Get** /api/v2/user_invitations/{user_invitation_uuid} | Get a user invitation
 *UsersApi* | [**GetUser**](docs/UsersApi.md#getuser) | **Get** /api/v2/users/{user_id} | Get a user
-*UsersApi* | [**GetUserOrganization**](docs/UsersApi.md#getuserorganization) | **Get** /api/v2/users/{user_id}/orgs | Get a user organization
-*UsersApi* | [**GetUserPermissions**](docs/UsersApi.md#getuserpermissions) | **Get** /api/v2/users/{user_id}/permissions | Get a user permissions
+*UsersApi* | [**ListUserOrganizations**](docs/UsersApi.md#listuserorganizations) | **Get** /api/v2/users/{user_id}/orgs | Get a user organization
+*UsersApi* | [**ListUserPermissions**](docs/UsersApi.md#listuserpermissions) | **Get** /api/v2/users/{user_id}/permissions | Get a user permissions
 *UsersApi* | [**ListUsers**](docs/UsersApi.md#listusers) | **Get** /api/v2/users | List all users
 *UsersApi* | [**SendInvitations**](docs/UsersApi.md#sendinvitations) | **Post** /api/v2/user_invitations | Send invitation emails
 *UsersApi* | [**UpdateUser**](docs/UsersApi.md#updateuser) | **Patch** /api/v2/users/{user_id} | Update a user
@@ -99,14 +116,17 @@ Class | Method | HTTP request | Description
  - [DashboardType](docs/DashboardType.md)
  - [Organization](docs/Organization.md)
  - [OrganizationAttributes](docs/OrganizationAttributes.md)
+ - [OrganizationsType](docs/OrganizationsType.md)
  - [Pagination](docs/Pagination.md)
  - [Permission](docs/Permission.md)
  - [PermissionAttributes](docs/PermissionAttributes.md)
- - [Permissions](docs/Permissions.md)
+ - [PermissionsResponse](docs/PermissionsResponse.md)
+ - [PermissionsType](docs/PermissionsType.md)
  - [QuerySortOrder](docs/QuerySortOrder.md)
  - [RelationshipToOrganization](docs/RelationshipToOrganization.md)
  - [RelationshipToOrganizationData](docs/RelationshipToOrganizationData.md)
  - [RelationshipToOrganizations](docs/RelationshipToOrganizations.md)
+ - [RelationshipToPermission](docs/RelationshipToPermission.md)
  - [RelationshipToPermissionData](docs/RelationshipToPermissionData.md)
  - [RelationshipToPermissions](docs/RelationshipToPermissions.md)
  - [RelationshipToRoleData](docs/RelationshipToRoleData.md)
@@ -117,7 +137,31 @@ Class | Method | HTTP request | Description
  - [ResponseMetaAttributes](docs/ResponseMetaAttributes.md)
  - [Role](docs/Role.md)
  - [RoleAttributes](docs/RoleAttributes.md)
+ - [RoleCreateAttributes](docs/RoleCreateAttributes.md)
+ - [RoleCreateData](docs/RoleCreateData.md)
+ - [RoleCreatePayload](docs/RoleCreatePayload.md)
  - [RoleRelationships](docs/RoleRelationships.md)
+ - [RoleResponse](docs/RoleResponse.md)
+ - [RoleResponseRelationships](docs/RoleResponseRelationships.md)
+ - [RoleUpdateAttributes](docs/RoleUpdateAttributes.md)
+ - [RoleUpdateData](docs/RoleUpdateData.md)
+ - [RoleUpdatePayload](docs/RoleUpdatePayload.md)
+ - [RolesResponse](docs/RolesResponse.md)
+ - [RolesSort](docs/RolesSort.md)
+ - [RolesType](docs/RolesType.md)
+ - [SecurityMonitoringListRulesResponse](docs/SecurityMonitoringListRulesResponse.md)
+ - [SecurityMonitoringRuleCase](docs/SecurityMonitoringRuleCase.md)
+ - [SecurityMonitoringRuleCreatePayload](docs/SecurityMonitoringRuleCreatePayload.md)
+ - [SecurityMonitoringRuleEvaluationWindow](docs/SecurityMonitoringRuleEvaluationWindow.md)
+ - [SecurityMonitoringRuleKeepAlive](docs/SecurityMonitoringRuleKeepAlive.md)
+ - [SecurityMonitoringRuleMaxSignalDuration](docs/SecurityMonitoringRuleMaxSignalDuration.md)
+ - [SecurityMonitoringRuleOptions](docs/SecurityMonitoringRuleOptions.md)
+ - [SecurityMonitoringRuleQuery](docs/SecurityMonitoringRuleQuery.md)
+ - [SecurityMonitoringRuleResponse](docs/SecurityMonitoringRuleResponse.md)
+ - [SecurityMonitoringRuleSeverity](docs/SecurityMonitoringRuleSeverity.md)
+ - [SecurityMonitoringRuleUpdatePayload](docs/SecurityMonitoringRuleUpdatePayload.md)
+ - [User](docs/User.md)
+ - [UserAttributes](docs/UserAttributes.md)
  - [UserCreateAttributes](docs/UserCreateAttributes.md)
  - [UserCreateData](docs/UserCreateData.md)
  - [UserCreatePayload](docs/UserCreatePayload.md)
@@ -128,16 +172,16 @@ Class | Method | HTTP request | Description
  - [UserInvitationResponse](docs/UserInvitationResponse.md)
  - [UserInvitationResponseData](docs/UserInvitationResponseData.md)
  - [UserInvitationsResponse](docs/UserInvitationsResponse.md)
+ - [UserInvitationsType](docs/UserInvitationsType.md)
  - [UserRelationships](docs/UserRelationships.md)
  - [UserResponse](docs/UserResponse.md)
- - [UserResponseAttributes](docs/UserResponseAttributes.md)
  - [UserResponseIncludedItem](docs/UserResponseIncludedItem.md)
- - [UserResponsePayload](docs/UserResponsePayload.md)
  - [UserResponseRelationships](docs/UserResponseRelationships.md)
  - [UserUpdateAttributes](docs/UserUpdateAttributes.md)
  - [UserUpdateData](docs/UserUpdateData.md)
  - [UserUpdatePayload](docs/UserUpdatePayload.md)
- - [UsersResponsePayload](docs/UsersResponsePayload.md)
+ - [UsersResponse](docs/UsersResponse.md)
+ - [UsersType](docs/UsersType.md)
 
 
 ## Documentation For Authorization

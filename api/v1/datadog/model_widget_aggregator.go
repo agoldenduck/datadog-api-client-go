@@ -12,7 +12,11 @@ import (
 	"encoding/json"
 )
 
-// WidgetAggregator Aggregator used for the request, available values are avg, last, max, min, or sum.
+import (
+	"fmt"
+)
+
+// WidgetAggregator Aggregator used for the request.
 type WidgetAggregator string
 
 // List of WidgetAggregator
@@ -23,6 +27,23 @@ const (
 	WIDGETAGGREGATOR_MINIMUM WidgetAggregator = "min"
 	WIDGETAGGREGATOR_SUM     WidgetAggregator = "sum"
 )
+
+func (v *WidgetAggregator) UnmarshalJSON(src []byte) error {
+	var value string
+	err := json.Unmarshal(src, &value)
+	if err != nil {
+		return err
+	}
+	enumTypeValue := WidgetAggregator(value)
+	for _, existing := range []WidgetAggregator{"avg", "last", "max", "min", "sum"} {
+		if existing == enumTypeValue {
+			*v = enumTypeValue
+			return nil
+		}
+	}
+
+	return fmt.Errorf("%+v is not a valid WidgetAggregator", *v)
+}
 
 // Ptr returns reference to WidgetAggregator value
 func (v WidgetAggregator) Ptr() *WidgetAggregator {

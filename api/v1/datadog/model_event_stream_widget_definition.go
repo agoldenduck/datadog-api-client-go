@@ -12,28 +12,27 @@ import (
 	"encoding/json"
 )
 
-// EventStreamWidgetDefinition The event stream is a widget version of the stream of events on the Event Stream view. Only available on FREE layout dashboards
+// EventStreamWidgetDefinition The event stream is a widget version of the stream of events on the Event Stream view. Only available on FREE layout dashboards.
 type EventStreamWidgetDefinition struct {
 	EventSize *WidgetEventSize `json:"event_size,omitempty"`
-	// Query to filter the event stream with
+	// Query to filter the event stream with.
 	Query string `json:"query"`
-	// The execution method for multi-value filters. Can be either and or or
+	// The execution method for multi-value filters. Can be either and or or.
 	TagsExecution *string     `json:"tags_execution,omitempty"`
 	Time          *WidgetTime `json:"time,omitempty"`
-	// Title of the widget
+	// Title of the widget.
 	Title      *string          `json:"title,omitempty"`
 	TitleAlign *WidgetTextAlign `json:"title_align,omitempty"`
-	// Size of the title
-	TitleSize *string `json:"title_size,omitempty"`
-	// Type of the widget
-	Type string `json:"type"`
+	// Size of the title.
+	TitleSize *string                         `json:"title_size,omitempty"`
+	Type      EventStreamWidgetDefinitionType `json:"type"`
 }
 
 // NewEventStreamWidgetDefinition instantiates a new EventStreamWidgetDefinition object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewEventStreamWidgetDefinition(query string, type_ string) *EventStreamWidgetDefinition {
+func NewEventStreamWidgetDefinition(query string, type_ EventStreamWidgetDefinitionType) *EventStreamWidgetDefinition {
 	this := EventStreamWidgetDefinition{}
 	this.Query = query
 	this.Type = type_
@@ -45,7 +44,7 @@ func NewEventStreamWidgetDefinition(query string, type_ string) *EventStreamWidg
 // but it doesn't guarantee that properties required by API are set
 func NewEventStreamWidgetDefinitionWithDefaults() *EventStreamWidgetDefinition {
 	this := EventStreamWidgetDefinition{}
-	var type_ string = "event_stream"
+	var type_ EventStreamWidgetDefinitionType = "event_stream"
 	this.Type = type_
 	return &this
 }
@@ -267,9 +266,9 @@ func (o *EventStreamWidgetDefinition) SetTitleSize(v string) {
 }
 
 // GetType returns the Type field value
-func (o *EventStreamWidgetDefinition) GetType() string {
+func (o *EventStreamWidgetDefinition) GetType() EventStreamWidgetDefinitionType {
 	if o == nil {
-		var ret string
+		var ret EventStreamWidgetDefinitionType
 		return ret
 	}
 
@@ -278,7 +277,7 @@ func (o *EventStreamWidgetDefinition) GetType() string {
 
 // GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
-func (o *EventStreamWidgetDefinition) GetTypeOk() (*string, bool) {
+func (o *EventStreamWidgetDefinition) GetTypeOk() (*EventStreamWidgetDefinitionType, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -286,7 +285,7 @@ func (o *EventStreamWidgetDefinition) GetTypeOk() (*string, bool) {
 }
 
 // SetType sets field value
-func (o *EventStreamWidgetDefinition) SetType(v string) {
+func (o *EventStreamWidgetDefinition) SetType(v EventStreamWidgetDefinitionType) {
 	o.Type = v
 }
 
@@ -317,11 +316,6 @@ func (o EventStreamWidgetDefinition) MarshalJSON() ([]byte, error) {
 		toSerialize["type"] = o.Type
 	}
 	return json.Marshal(toSerialize)
-}
-
-// AsWidgetDefinition wraps this instance of EventStreamWidgetDefinition in WidgetDefinition
-func (s *EventStreamWidgetDefinition) AsWidgetDefinition() WidgetDefinition {
-	return WidgetDefinition{WidgetDefinitionInterface: s}
 }
 
 type NullableEventStreamWidgetDefinition struct {

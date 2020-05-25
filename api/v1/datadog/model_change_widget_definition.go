@@ -12,25 +12,24 @@ import (
 	"encoding/json"
 )
 
-// ChangeWidgetDefinition The Change graph shows you the change in a value over the time period chosen
+// ChangeWidgetDefinition The Change graph shows you the change in a value over the time period chosen.
 type ChangeWidgetDefinition struct {
-	// TODO.
+	// Array of one request object to display in the widget.  See the dedicated [Request JSON schema documentation](https://docs.datadoghq.com/dashboards/graphing_json/request_json)  to learn how to build the `REQUEST_SCHEMA`.
 	Requests []ChangeWidgetRequest `json:"requests"`
 	Time     *WidgetTime           `json:"time,omitempty"`
-	// Title of the widget
+	// Title of the widget.
 	Title      *string          `json:"title,omitempty"`
 	TitleAlign *WidgetTextAlign `json:"title_align,omitempty"`
-	// Size of the title
-	TitleSize *string `json:"title_size,omitempty"`
-	// Type of the widget
-	Type string `json:"type"`
+	// Size of the title.
+	TitleSize *string                    `json:"title_size,omitempty"`
+	Type      ChangeWidgetDefinitionType `json:"type"`
 }
 
 // NewChangeWidgetDefinition instantiates a new ChangeWidgetDefinition object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewChangeWidgetDefinition(requests []ChangeWidgetRequest, type_ string) *ChangeWidgetDefinition {
+func NewChangeWidgetDefinition(requests []ChangeWidgetRequest, type_ ChangeWidgetDefinitionType) *ChangeWidgetDefinition {
 	this := ChangeWidgetDefinition{}
 	this.Requests = requests
 	this.Type = type_
@@ -42,7 +41,7 @@ func NewChangeWidgetDefinition(requests []ChangeWidgetRequest, type_ string) *Ch
 // but it doesn't guarantee that properties required by API are set
 func NewChangeWidgetDefinitionWithDefaults() *ChangeWidgetDefinition {
 	this := ChangeWidgetDefinition{}
-	var type_ string = "change"
+	var type_ ChangeWidgetDefinitionType = "change"
 	this.Type = type_
 	return &this
 }
@@ -200,9 +199,9 @@ func (o *ChangeWidgetDefinition) SetTitleSize(v string) {
 }
 
 // GetType returns the Type field value
-func (o *ChangeWidgetDefinition) GetType() string {
+func (o *ChangeWidgetDefinition) GetType() ChangeWidgetDefinitionType {
 	if o == nil {
-		var ret string
+		var ret ChangeWidgetDefinitionType
 		return ret
 	}
 
@@ -211,7 +210,7 @@ func (o *ChangeWidgetDefinition) GetType() string {
 
 // GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
-func (o *ChangeWidgetDefinition) GetTypeOk() (*string, bool) {
+func (o *ChangeWidgetDefinition) GetTypeOk() (*ChangeWidgetDefinitionType, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -219,7 +218,7 @@ func (o *ChangeWidgetDefinition) GetTypeOk() (*string, bool) {
 }
 
 // SetType sets field value
-func (o *ChangeWidgetDefinition) SetType(v string) {
+func (o *ChangeWidgetDefinition) SetType(v ChangeWidgetDefinitionType) {
 	o.Type = v
 }
 
@@ -244,11 +243,6 @@ func (o ChangeWidgetDefinition) MarshalJSON() ([]byte, error) {
 		toSerialize["type"] = o.Type
 	}
 	return json.Marshal(toSerialize)
-}
-
-// AsWidgetDefinition wraps this instance of ChangeWidgetDefinition in WidgetDefinition
-func (s *ChangeWidgetDefinition) AsWidgetDefinition() WidgetDefinition {
-	return WidgetDefinition{WidgetDefinitionInterface: s}
 }
 
 type NullableChangeWidgetDefinition struct {

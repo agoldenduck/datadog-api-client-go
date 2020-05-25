@@ -12,15 +12,15 @@ import (
 	"encoding/json"
 )
 
-// ProcessQueryDefinition TODO.
+// ProcessQueryDefinition The process query to use in the widget.
 type ProcessQueryDefinition struct {
-	// TODO.
+	// List of processes.
 	FilterBy *[]string `json:"filter_by,omitempty"`
-	// TODO.
+	// Max number of items in the filter list.
 	Limit *int64 `json:"limit,omitempty"`
-	// TODO.
+	// Your chosen metric.
 	Metric string `json:"metric"`
-	// TODO.
+	// Your chosen search term.
 	SearchBy *string `json:"search_by,omitempty"`
 }
 

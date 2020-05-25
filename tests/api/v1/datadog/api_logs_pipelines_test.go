@@ -8,19 +8,17 @@ package test
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"testing"
 
 	"github.com/DataDog/datadog-api-client-go/api/v1/datadog"
-	"github.com/stretchr/testify/assert"
+	"github.com/DataDog/datadog-api-client-go/tests"
 )
 
 func TestLogsPipelinesLifecycle(t *testing.T) {
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
-
-	now := TESTCLOCK.Now()
+	ctx, finish := WithRecorder(WithTestAuth(context.Background()), t)
+	defer finish()
+	assert := tests.Assert(ctx, t)
 
 	// Create a pipeline
 	grokParser := datadog.NewLogsGrokParserWithDefaults()
@@ -107,70 +105,107 @@ func TestLogsPipelinesLifecycle(t *testing.T) {
 	traceRemapper.SetSources([]string{"source"})
 	traceRemapper.SetName("trace remapper")
 
+	// Nested Pipelines
+	pipelineProcessor := datadog.NewLogsPipelineProcessorWithDefaults()
+	pipelineProcessor.SetName("pipeline processor")
+	pipelineProcessor.SetFilter(datadog.LogsFilter{
+		Query: datadog.PtrString("query"),
+	})
+	pipelineProcessor.SetProcessors([]datadog.LogsProcessor{
+		datadog.LogsGrokParserAsLogsProcessor(grokParser),
+		datadog.LogsDateRemapperAsLogsProcessor(logDateRemapper),
+	})
+
 	pipeline := datadog.LogsPipeline{}
 	pipeline.SetIsEnabled(true)
 	pipeline.SetFilter(datadog.LogsFilter{Query: datadog.PtrString("query")})
 	pipeline.SetProcessors([]datadog.LogsProcessor{
-		grokParser.AsLogsProcessor(),
-		logDateRemapper.AsLogsProcessor(),
-		logStatusRemapper.AsLogsProcessor(),
-		serviceRemapper.AsLogsProcessor(),
-		logMessageRemapper.AsLogsProcessor(),
-		remapper.AsLogsProcessor(),
-		urlParser.AsLogsProcessor(),
-		userAgentParser.AsLogsProcessor(),
-		categoryProcessor.AsLogsProcessor(),
-		arithmeticProcessor.AsLogsProcessor(),
-		stringBuilderProcessor.AsLogsProcessor(),
-		geoIPParser.AsLogsProcessor(),
-		lookupProcessor.AsLogsProcessor(),
-		traceRemapper.AsLogsProcessor(),
+		datadog.LogsGrokParserAsLogsProcessor(grokParser),
+		datadog.LogsDateRemapperAsLogsProcessor(logDateRemapper),
+		datadog.LogsStatusRemapperAsLogsProcessor(logStatusRemapper),
+		datadog.LogsServiceRemapperAsLogsProcessor(serviceRemapper),
+		datadog.LogsMessageRemapperAsLogsProcessor(logMessageRemapper),
+		datadog.LogsAttributeRemapperAsLogsProcessor(remapper),
+		datadog.LogsURLParserAsLogsProcessor(urlParser),
+		datadog.LogsUserAgentParserAsLogsProcessor(userAgentParser),
+		datadog.LogsCategoryProcessorAsLogsProcessor(categoryProcessor),
+		datadog.LogsArithmeticProcessorAsLogsProcessor(arithmeticProcessor),
+		datadog.LogsStringBuilderProcessorAsLogsProcessor(stringBuilderProcessor),
+		datadog.LogsGeoIPParserAsLogsProcessor(geoIPParser),
+		datadog.LogsLookupProcessorAsLogsProcessor(lookupProcessor),
+		datadog.LogsTraceRemapperAsLogsProcessor(traceRemapper),
+		datadog.LogsPipelineProcessorAsLogsProcessor(pipelineProcessor),
 	})
-	pipelineName := fmt.Sprintf("go-client-test-pipeline-%d", now.Unix())
+	pipelineName := *tests.UniqueEntityName(ctx, t)
 	pipeline.SetName(pipelineName)
 
-	createdPipeline, httpresp, err := TESTAPICLIENT.LogsPipelinesApi.CreateLogsPipeline(TESTAUTH).Body(pipeline).Execute()
+	createdPipeline, httpresp, err := Client(ctx).LogsPipelinesApi.CreateLogsPipeline(ctx).Body(pipeline).Execute()
 	if err != nil {
 		t.Fatalf("Error creating logs pipeline: Response %s: %v", err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	defer deleteLogsPipeline(createdPipeline.GetId())
-	assert.Equal(t, 200, httpresp.StatusCode)
+	defer deleteLogsPipeline(ctx, createdPipeline.GetId())
+	assert.Equal(200, httpresp.StatusCode)
 
-	assert.Equal(t, pipelineName, createdPipeline.GetName())
-	assert.True(t, createdPipeline.GetIsEnabled())
+	assert.Equal(pipelineName, createdPipeline.GetName())
+	assert.True(createdPipeline.GetIsEnabled())
 	filter := createdPipeline.GetFilter()
-	assert.Equal(t, "query", filter.GetQuery())
+	assert.Equal("query", filter.GetQuery())
 	processors := createdPipeline.GetProcessors()
-	assert.Equal(t, grokParser.GetType(), processors[0].LogsProcessorInterface.GetType())
-	assert.Equal(t, logDateRemapper.GetType(), processors[1].LogsProcessorInterface.GetType())
-	assert.Equal(t, logStatusRemapper.GetType(), processors[2].LogsProcessorInterface.GetType())
-	assert.Equal(t, serviceRemapper.GetType(), processors[3].LogsProcessorInterface.GetType())
-	assert.Equal(t, logMessageRemapper.GetType(), processors[4].LogsProcessorInterface.GetType())
-	assert.Equal(t, remapper.GetType(), processors[5].LogsProcessorInterface.GetType())
-	assert.Equal(t, urlParser.GetType(), processors[6].LogsProcessorInterface.GetType())
-	assert.Equal(t, userAgentParser.GetType(), processors[7].LogsProcessorInterface.GetType())
-	assert.Equal(t, categoryProcessor.GetType(), processors[8].LogsProcessorInterface.GetType())
-	assert.Equal(t, arithmeticProcessor.GetType(), processors[9].LogsProcessorInterface.GetType())
-	assert.Equal(t, stringBuilderProcessor.GetType(), processors[10].LogsProcessorInterface.GetType())
-	assert.Equal(t, geoIPParser.GetType(), processors[11].LogsProcessorInterface.GetType())
-	assert.Equal(t, lookupProcessor.GetType(), processors[12].LogsProcessorInterface.GetType())
-	assert.Equal(t, traceRemapper.GetType(), processors[13].LogsProcessorInterface.GetType())
+	_, ok := processors[0].GetActualInstance().(*datadog.LogsGrokParser)
+	assert.True(ok)
+	_, ok = processors[1].GetActualInstance().(*datadog.LogsDateRemapper)
+	assert.True(ok)
+	_, ok = processors[2].GetActualInstance().(*datadog.LogsStatusRemapper)
+	assert.True(ok)
+	_, ok = processors[3].GetActualInstance().(*datadog.LogsServiceRemapper)
+	assert.True(ok)
+	_, ok = processors[4].GetActualInstance().(*datadog.LogsMessageRemapper)
+	assert.True(ok)
+	_, ok = processors[5].GetActualInstance().(*datadog.LogsAttributeRemapper)
+	assert.True(ok)
+	_, ok = processors[6].GetActualInstance().(*datadog.LogsURLParser)
+	assert.True(ok)
+	_, ok = processors[7].GetActualInstance().(*datadog.LogsUserAgentParser)
+	assert.True(ok)
+	_, ok = processors[8].GetActualInstance().(*datadog.LogsCategoryProcessor)
+	assert.True(ok)
+	_, ok = processors[9].GetActualInstance().(*datadog.LogsArithmeticProcessor)
+	assert.True(ok)
+	_, ok = processors[10].GetActualInstance().(*datadog.LogsStringBuilderProcessor)
+	assert.True(ok)
+	_, ok = processors[11].GetActualInstance().(*datadog.LogsGeoIPParser)
+	assert.True(ok)
+	_, ok = processors[12].GetActualInstance().(*datadog.LogsLookupProcessor)
+	assert.True(ok)
+	_, ok = processors[13].GetActualInstance().(*datadog.LogsTraceRemapper)
+	assert.True(ok)
+	var nestedPipeline *datadog.LogsPipelineProcessor
+	nestedPipeline, ok = processors[14].GetActualInstance().(*datadog.LogsPipelineProcessor)
+	assert.True(ok)
+
+	// Nested Pipeline Assertions
+	nestedPipelineFitler := nestedPipeline.GetFilter()
+	assert.Equal("query", nestedPipelineFitler.GetQuery())
+	_, ok = nestedPipeline.GetProcessors()[0].GetActualInstance().(*datadog.LogsGrokParser)
+	assert.True(ok)
+	_, ok = nestedPipeline.GetProcessors()[1].GetActualInstance().(*datadog.LogsDateRemapper)
+	assert.True(ok)
 
 	// Get all pipelines and assert our freshly created one is part of the result
-	pipelines, httpresp, err := TESTAPICLIENT.LogsPipelinesApi.ListLogsPipelines(TESTAUTH).Execute()
+	pipelines, httpresp, err := Client(ctx).LogsPipelinesApi.ListLogsPipelines(ctx).Execute()
 	if err != nil {
 		t.Fatalf("Error getting all logs pipelines: Response %s: %v", err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
-	assert.Contains(t, pipelines, createdPipeline)
+	assert.Equal(200, httpresp.StatusCode)
+	assert.Contains(pipelines, createdPipeline)
 
 	// Get the freshly created pipeline
-	pipe, httpresp, err := TESTAPICLIENT.LogsPipelinesApi.GetLogsPipeline(TESTAUTH, createdPipeline.GetId()).Execute()
+	pipe, httpresp, err := Client(ctx).LogsPipelinesApi.GetLogsPipeline(ctx, createdPipeline.GetId()).Execute()
 	if err != nil {
 		t.Fatalf("Error getting log pipeline: Response %s: %v", err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
-	assert.Equal(t, createdPipeline.GetName(), pipe.GetName())
+	assert.Equal(200, httpresp.StatusCode)
+	assert.Equal(createdPipeline.GetName(), pipe.GetName())
 
 	// Update the pipeline
 	processors = pipeline.GetProcessors()
@@ -180,268 +215,300 @@ func TestLogsPipelinesLifecycle(t *testing.T) {
 	pipeline.SetFilter(datadog.LogsFilter{Query: datadog.PtrString("updated query")})
 	pipeline.SetName(pipeline.GetName() + "-updated")
 
-	updatedPipeline, httpresp, err := TESTAPICLIENT.LogsPipelinesApi.UpdateLogsPipeline(TESTAUTH, createdPipeline.GetId()).Body(pipeline).Execute()
+	updatedPipeline, httpresp, err := Client(ctx).LogsPipelinesApi.UpdateLogsPipeline(ctx, createdPipeline.GetId()).Body(pipeline).Execute()
 	if err != nil {
 		t.Fatalf("Error updating logs pipeline: Response %s: %v", err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
+	assert.Equal(200, httpresp.StatusCode)
 
-	assert.Equal(t, pipelineName+"-updated", updatedPipeline.GetName())
-	assert.False(t, updatedPipeline.GetIsEnabled())
+	assert.Equal(pipelineName+"-updated", updatedPipeline.GetName())
+	assert.False(updatedPipeline.GetIsEnabled())
 	filter = updatedPipeline.GetFilter()
-	assert.Equal(t, "updated query", filter.GetQuery())
+	assert.Equal("updated query", filter.GetQuery())
 	processors = updatedPipeline.GetProcessors()
-	assert.Equal(t, grokParser.GetType(), processors[13].LogsProcessorInterface.GetType())
-	assert.Equal(t, logDateRemapper.GetType(), processors[0].LogsProcessorInterface.GetType())
-	assert.Equal(t, logStatusRemapper.GetType(), processors[1].LogsProcessorInterface.GetType())
-	assert.Equal(t, serviceRemapper.GetType(), processors[2].LogsProcessorInterface.GetType())
-	assert.Equal(t, logMessageRemapper.GetType(), processors[3].LogsProcessorInterface.GetType())
-	assert.Equal(t, remapper.GetType(), processors[4].LogsProcessorInterface.GetType())
-	assert.Equal(t, urlParser.GetType(), processors[5].LogsProcessorInterface.GetType())
-	assert.Equal(t, userAgentParser.GetType(), processors[6].LogsProcessorInterface.GetType())
-	assert.Equal(t, categoryProcessor.GetType(), processors[7].LogsProcessorInterface.GetType())
-	assert.Equal(t, arithmeticProcessor.GetType(), processors[8].LogsProcessorInterface.GetType())
-	assert.Equal(t, stringBuilderProcessor.GetType(), processors[9].LogsProcessorInterface.GetType())
-	assert.Equal(t, geoIPParser.GetType(), processors[10].LogsProcessorInterface.GetType())
-	assert.Equal(t, lookupProcessor.GetType(), processors[11].LogsProcessorInterface.GetType())
-	assert.Equal(t, traceRemapper.GetType(), processors[12].LogsProcessorInterface.GetType())
+
+	_, ok = processors[14].GetActualInstance().(*datadog.LogsGrokParser)
+	assert.True(ok)
+	_, ok = processors[13].GetActualInstance().(*datadog.LogsPipelineProcessor)
+	assert.True(ok)
+	_, ok = processors[0].GetActualInstance().(*datadog.LogsDateRemapper)
+	assert.True(ok)
+	_, ok = processors[1].GetActualInstance().(*datadog.LogsStatusRemapper)
+	assert.True(ok)
+	_, ok = processors[2].GetActualInstance().(*datadog.LogsServiceRemapper)
+	assert.True(ok)
+	_, ok = processors[3].GetActualInstance().(*datadog.LogsMessageRemapper)
+	assert.True(ok)
+	_, ok = processors[4].GetActualInstance().(*datadog.LogsAttributeRemapper)
+	assert.True(ok)
+	_, ok = processors[5].GetActualInstance().(*datadog.LogsURLParser)
+	assert.True(ok)
+	_, ok = processors[6].GetActualInstance().(*datadog.LogsUserAgentParser)
+	assert.True(ok)
+	_, ok = processors[7].GetActualInstance().(*datadog.LogsCategoryProcessor)
+	assert.True(ok)
+	_, ok = processors[8].GetActualInstance().(*datadog.LogsArithmeticProcessor)
+	assert.True(ok)
+	_, ok = processors[9].GetActualInstance().(*datadog.LogsStringBuilderProcessor)
+	assert.True(ok)
+	_, ok = processors[10].GetActualInstance().(*datadog.LogsGeoIPParser)
+	assert.True(ok)
+	_, ok = processors[11].GetActualInstance().(*datadog.LogsLookupProcessor)
+	assert.True(ok)
+	_, ok = processors[12].GetActualInstance().(*datadog.LogsTraceRemapper)
+	assert.True(ok)
 
 	// Delete the pipeline
-	httpresp, err = TESTAPICLIENT.LogsPipelinesApi.DeleteLogsPipeline(TESTAUTH, createdPipeline.GetId()).Execute()
-	assert.Nil(t, err)
+	httpresp, err = Client(ctx).LogsPipelinesApi.DeleteLogsPipeline(ctx, createdPipeline.GetId()).Execute()
+	assert.Nil(err)
 }
 
 func TestUpdateLogsPipelineOrder(t *testing.T) {
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, finish := WithRecorder(WithTestAuth(context.Background()), t)
+	defer finish()
+	assert := tests.Assert(ctx, t)
 
-	pipelineOrder, httpresp, err := TESTAPICLIENT.LogsPipelinesApi.GetLogsPipelineOrder(TESTAUTH).Execute()
+	pipelineOrder, httpresp, err := Client(ctx).LogsPipelinesApi.GetLogsPipelineOrder(ctx).Execute()
 	if err != nil {
 		t.Fatalf("Error getting pipeline order: Response %s: %v", err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
+	assert.Equal(200, httpresp.StatusCode)
 
 	newOrder := pipelineOrder.GetPipelineIds()
 	newOrder = append(newOrder[1:], newOrder[:1]...)
 	pipelineOrder.SetPipelineIds(newOrder)
 
-	newPipelineOrder, httpresp, err := TESTAPICLIENT.LogsPipelinesApi.UpdateLogsPipelineOrder(TESTAUTH).Body(pipelineOrder).Execute()
+	newPipelineOrder, httpresp, err := Client(ctx).LogsPipelinesApi.UpdateLogsPipelineOrder(ctx).Body(pipelineOrder).Execute()
 	if err != nil {
 		t.Fatalf("Error updating with new order %v: Response %s: %v", newOrder, err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
-	assert.Equal(t, pipelineOrder.GetPipelineIds(), newPipelineOrder.GetPipelineIds())
+	assert.Equal(200, httpresp.StatusCode)
+	assert.Equal(pipelineOrder.GetPipelineIds(), newPipelineOrder.GetPipelineIds())
 }
 
 func TestLogsPipelinesOrderGetErrors(t *testing.T) {
-	// Setup the Client we'll use to interact with the Test account
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, close := tests.WithTestSpan(context.Background(), t)
+	defer close()
 
-	testCases := []struct {
-		Name               string
-		Ctx                context.Context
+	testCases := map[string]struct {
+		Ctx                func(context.Context) context.Context
 		ExpectedStatusCode int
 	}{
-		{"403 Forbidden", fake_auth, 403},
+		"403 Forbidden": {WithFakeAuth, 403},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			_, httpresp, err := TESTAPICLIENT.LogsPipelinesApi.GetLogsPipelineOrder(tc.Ctx).Execute()
-			assert.Equal(t, tc.ExpectedStatusCode, httpresp.StatusCode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, finish := WithRecorder(tc.Ctx(ctx), t)
+			defer finish()
+			assert := tests.Assert(ctx, t)
+
+			_, httpresp, err := Client(ctx).LogsPipelinesApi.GetLogsPipelineOrder(ctx).Execute()
+			assert.Equal(tc.ExpectedStatusCode, httpresp.StatusCode)
 			apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.APIErrorResponse)
-			assert.True(t, ok)
-			assert.NotEmpty(t, apiError.GetErrors())
+			assert.True(ok)
+			assert.NotEmpty(apiError.GetErrors())
 		})
 	}
 }
 
 func TestLogsPipelinesOrderUpdateErrors(t *testing.T) {
-	// Setup the Client we'll use to interact with the Test account
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, close := tests.WithTestSpan(context.Background(), t)
+	defer close()
 
-	testCases := []struct {
-		Name               string
-		Ctx                context.Context
+	testCases := map[string]struct {
+		Ctx                func(context.Context) context.Context
 		Body               datadog.LogsPipelinesOrder
 		ExpectedStatusCode int
 	}{
-		{"400 Bad Request", TESTAUTH, datadog.LogsPipelinesOrder{}, 400},
-		{"403 Forbidden", fake_auth, datadog.LogsPipelinesOrder{}, 403},
-		{"422 Unprocessable Entity", TESTAUTH, datadog.LogsPipelinesOrder{PipelineIds: []string{"id"}}, 422},
+		"400 Bad Request":          {WithTestAuth, datadog.LogsPipelinesOrder{}, 400},
+		"403 Forbidden":            {WithFakeAuth, datadog.LogsPipelinesOrder{}, 403},
+		"422 Unprocessable Entity": {WithTestAuth, datadog.LogsPipelinesOrder{PipelineIds: []string{"id"}}, 422},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			_, httpresp, err := TESTAPICLIENT.LogsPipelinesApi.UpdateLogsPipelineOrder(tc.Ctx).Body(tc.Body).Execute()
-			assert.Equal(t, tc.ExpectedStatusCode, httpresp.StatusCode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, finish := WithRecorder(tc.Ctx(ctx), t)
+			defer finish()
+			assert := tests.Assert(ctx, t)
+
+			_, httpresp, err := Client(ctx).LogsPipelinesApi.UpdateLogsPipelineOrder(ctx).Body(tc.Body).Execute()
+			assert.Equal(tc.ExpectedStatusCode, httpresp.StatusCode)
 			if tc.ExpectedStatusCode == 403 {
 				apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.APIErrorResponse)
-				assert.True(t, ok)
-				assert.NotEmpty(t, apiError.GetErrors())
+				assert.True(ok)
+				assert.NotEmpty(apiError.GetErrors())
 			} else {
 				apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.LogsAPIErrorResponse)
-				assert.True(t, ok)
-				assert.NotEmpty(t, apiError.GetError())
+				assert.True(ok)
+				assert.NotEmpty(apiError.GetError())
 			}
 		})
 	}
 }
 
 func TestLogsPipelinesListErrors(t *testing.T) {
-	// Setup the Client we'll use to interact with the Test account
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, close := tests.WithTestSpan(context.Background(), t)
+	defer close()
 
-	testCases := []struct {
-		Name               string
-		Ctx                context.Context
+	testCases := map[string]struct {
+		Ctx                func(context.Context) context.Context
 		ExpectedStatusCode int
 	}{
-		{"403 Forbidden", fake_auth, 403},
+		"403 Forbidden": {WithFakeAuth, 403},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			_, httpresp, err := TESTAPICLIENT.LogsPipelinesApi.ListLogsPipelines(tc.Ctx).Execute()
-			assert.Equal(t, tc.ExpectedStatusCode, httpresp.StatusCode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, finish := WithRecorder(tc.Ctx(ctx), t)
+			defer finish()
+			assert := tests.Assert(ctx, t)
+
+			_, httpresp, err := Client(ctx).LogsPipelinesApi.ListLogsPipelines(ctx).Execute()
+			assert.Equal(tc.ExpectedStatusCode, httpresp.StatusCode)
 			apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.APIErrorResponse)
-			assert.True(t, ok)
-			assert.NotEmpty(t, apiError.GetErrors())
+			assert.True(ok)
+			assert.NotEmpty(apiError.GetErrors())
 		})
 	}
 }
 
 func TestLogsPipelinesCreateErrors(t *testing.T) {
-	// Setup the Client we'll use to interact with the Test account
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, close := tests.WithTestSpan(context.Background(), t)
+	defer close()
 
-	testCases := []struct {
-		Name               string
-		Ctx                context.Context
+	testCases := map[string]struct {
+		Ctx                func(context.Context) context.Context
 		Body               datadog.LogsPipeline
 		ExpectedStatusCode int
 	}{
-		{"400 Bad Request", TESTAUTH, datadog.LogsPipeline{}, 400},
-		{"403 Forbidden", fake_auth, datadog.LogsPipeline{}, 403},
+		"400 Bad Request": {WithTestAuth, datadog.LogsPipeline{}, 400},
+		"403 Forbidden":   {WithFakeAuth, datadog.LogsPipeline{}, 403},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			_, httpresp, err := TESTAPICLIENT.LogsPipelinesApi.CreateLogsPipeline(tc.Ctx).Body(tc.Body).Execute()
-			assert.Equal(t, tc.ExpectedStatusCode, httpresp.StatusCode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, finish := WithRecorder(tc.Ctx(ctx), t)
+			defer finish()
+			assert := tests.Assert(ctx, t)
+
+			_, httpresp, err := Client(ctx).LogsPipelinesApi.CreateLogsPipeline(ctx).Body(tc.Body).Execute()
+			assert.Equal(tc.ExpectedStatusCode, httpresp.StatusCode)
 			if tc.ExpectedStatusCode == 403 {
 				apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.APIErrorResponse)
-				assert.True(t, ok)
-				assert.NotEmpty(t, apiError.GetErrors())
+				assert.True(ok)
+				assert.NotEmpty(apiError.GetErrors())
 			} else {
 				apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.LogsAPIErrorResponse)
-				assert.True(t, ok)
-				assert.NotEmpty(t, apiError.GetError())
+				assert.True(ok)
+				assert.NotEmpty(apiError.GetError())
 			}
 		})
 	}
 }
 
 func TestLogsPipelinesGetErrors(t *testing.T) {
-	// Setup the Client we'll use to interact with the Test account
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, close := tests.WithTestSpan(context.Background(), t)
+	defer close()
 
-	testCases := []struct {
-		Name               string
-		Ctx                context.Context
+	testCases := map[string]struct {
+		Ctx                func(context.Context) context.Context
 		ExpectedStatusCode int
 	}{
-		{"400 Bad Request", TESTAUTH, 400},
-		{"403 Forbidden", fake_auth, 403},
+		"400 Bad Request": {WithTestAuth, 400},
+		"403 Forbidden":   {WithFakeAuth, 403},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			_, httpresp, err := TESTAPICLIENT.LogsPipelinesApi.GetLogsPipeline(tc.Ctx, "id").Execute()
-			assert.Equal(t, tc.ExpectedStatusCode, httpresp.StatusCode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, finish := WithRecorder(tc.Ctx(ctx), t)
+			defer finish()
+			assert := tests.Assert(ctx, t)
+
+			_, httpresp, err := Client(ctx).LogsPipelinesApi.GetLogsPipeline(ctx, "id").Execute()
+			assert.Equal(tc.ExpectedStatusCode, httpresp.StatusCode)
 			if tc.ExpectedStatusCode == 403 {
 				apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.APIErrorResponse)
-				assert.True(t, ok)
-				assert.NotEmpty(t, apiError.GetErrors())
+				assert.True(ok)
+				assert.NotEmpty(apiError.GetErrors())
 			} else {
 				apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.LogsAPIErrorResponse)
-				assert.True(t, ok)
-				assert.NotEmpty(t, apiError.GetError())
+				assert.True(ok)
+				assert.NotEmpty(apiError.GetError())
 			}
 		})
 	}
 }
 
 func TestLogsPipelinesDeleteErrors(t *testing.T) {
-	// Setup the Client we'll use to interact with the Test account
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, close := tests.WithTestSpan(context.Background(), t)
+	defer close()
 
-	testCases := []struct {
-		Name               string
-		Ctx                context.Context
+	testCases := map[string]struct {
+		Ctx                func(context.Context) context.Context
 		ExpectedStatusCode int
 	}{
-		{"400 Bad Request", TESTAUTH, 400},
-		{"403 Forbidden", fake_auth, 403},
+		"400 Bad Request": {WithTestAuth, 400},
+		"403 Forbidden":   {WithFakeAuth, 403},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			httpresp, err := TESTAPICLIENT.LogsPipelinesApi.DeleteLogsPipeline(tc.Ctx, "id").Execute()
-			assert.Equal(t, tc.ExpectedStatusCode, httpresp.StatusCode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, finish := WithRecorder(tc.Ctx(ctx), t)
+			defer finish()
+			assert := tests.Assert(ctx, t)
+
+			httpresp, err := Client(ctx).LogsPipelinesApi.DeleteLogsPipeline(ctx, "id").Execute()
+			assert.Equal(tc.ExpectedStatusCode, httpresp.StatusCode)
 			if tc.ExpectedStatusCode == 403 {
 				apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.APIErrorResponse)
-				assert.True(t, ok)
-				assert.NotEmpty(t, apiError.GetErrors())
+				assert.True(ok)
+				assert.NotEmpty(apiError.GetErrors())
 			} else {
 				apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.LogsAPIErrorResponse)
-				assert.True(t, ok)
-				assert.NotEmpty(t, apiError.GetError())
+				assert.True(ok)
+				assert.NotEmpty(apiError.GetError())
 			}
 		})
 	}
 }
 
 func TestLogsPipelinesUpdateErrors(t *testing.T) {
-	// Setup the Client we'll use to interact with the Test account
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, close := tests.WithTestSpan(context.Background(), t)
+	defer close()
 
-	testCases := []struct {
-		Name               string
-		Ctx                context.Context
+	testCases := map[string]struct {
+		Ctx                func(context.Context) context.Context
 		Body               datadog.LogsPipeline
 		ExpectedStatusCode int
 	}{
-		{"400 Bad Request", TESTAUTH, datadog.LogsPipeline{}, 400},
-		{"403 Forbidden", fake_auth, datadog.LogsPipeline{}, 403},
+		"400 Bad Request": {WithTestAuth, datadog.LogsPipeline{}, 400},
+		"403 Forbidden":   {WithFakeAuth, datadog.LogsPipeline{}, 403},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			_, httpresp, err := TESTAPICLIENT.LogsPipelinesApi.UpdateLogsPipeline(tc.Ctx, "id").Body(tc.Body).Execute()
-			assert.Equal(t, tc.ExpectedStatusCode, httpresp.StatusCode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, finish := WithRecorder(tc.Ctx(ctx), t)
+			defer finish()
+			assert := tests.Assert(ctx, t)
+
+			_, httpresp, err := Client(ctx).LogsPipelinesApi.UpdateLogsPipeline(ctx, "id").Body(tc.Body).Execute()
+			assert.Equal(tc.ExpectedStatusCode, httpresp.StatusCode)
 			if tc.ExpectedStatusCode == 403 {
 				apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.APIErrorResponse)
-				assert.True(t, ok)
-				assert.NotEmpty(t, apiError.GetErrors())
+				assert.True(ok)
+				assert.NotEmpty(apiError.GetErrors())
 			} else {
 				apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.LogsAPIErrorResponse)
-				assert.True(t, ok)
-				assert.NotEmpty(t, apiError.GetError())
+				assert.True(ok)
+				assert.NotEmpty(apiError.GetError())
 			}
 		})
 	}
 }
 
-func deleteLogsPipeline(pipelineID string) {
-	httpresp, err := TESTAPICLIENT.LogsPipelinesApi.DeleteLogsPipeline(TESTAUTH, pipelineID).Execute()
+func deleteLogsPipeline(ctx context.Context, pipelineID string) {
+	httpresp, err := Client(ctx).LogsPipelinesApi.DeleteLogsPipeline(ctx, pipelineID).Execute()
 	if err != nil && httpresp.StatusCode != 404 {
 		log.Printf("Error deleting Logs Pipeline: %v, Another test may have already deleted this pipeline.", pipelineID)
 	}

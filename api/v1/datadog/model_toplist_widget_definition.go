@@ -12,25 +12,24 @@ import (
 	"encoding/json"
 )
 
-// ToplistWidgetDefinition The top list visualization enables you to display a list of Tag value like hostname or service with the most or least of any metric value, such as highest consumers of CPU, hosts with the least disk space, etc
+// ToplistWidgetDefinition The top list visualization enables you to display a list of Tag value like hostname or service with the most or least of any metric value, such as highest consumers of CPU, hosts with the least disk space, etc.
 type ToplistWidgetDefinition struct {
-	// TODO.
+	// List of top list widget requests.
 	Requests []ToplistWidgetRequest `json:"requests"`
 	Time     *WidgetTime            `json:"time,omitempty"`
 	// Title of your widget.
 	Title      *string          `json:"title,omitempty"`
 	TitleAlign *WidgetTextAlign `json:"title_align,omitempty"`
-	// Size of the title
-	TitleSize *string `json:"title_size,omitempty"`
-	// Type of the widget
-	Type string `json:"type"`
+	// Size of the title.
+	TitleSize *string                     `json:"title_size,omitempty"`
+	Type      ToplistWidgetDefinitionType `json:"type"`
 }
 
 // NewToplistWidgetDefinition instantiates a new ToplistWidgetDefinition object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewToplistWidgetDefinition(requests []ToplistWidgetRequest, type_ string) *ToplistWidgetDefinition {
+func NewToplistWidgetDefinition(requests []ToplistWidgetRequest, type_ ToplistWidgetDefinitionType) *ToplistWidgetDefinition {
 	this := ToplistWidgetDefinition{}
 	this.Requests = requests
 	this.Type = type_
@@ -42,7 +41,7 @@ func NewToplistWidgetDefinition(requests []ToplistWidgetRequest, type_ string) *
 // but it doesn't guarantee that properties required by API are set
 func NewToplistWidgetDefinitionWithDefaults() *ToplistWidgetDefinition {
 	this := ToplistWidgetDefinition{}
-	var type_ string = "toplist"
+	var type_ ToplistWidgetDefinitionType = "toplist"
 	this.Type = type_
 	return &this
 }
@@ -200,9 +199,9 @@ func (o *ToplistWidgetDefinition) SetTitleSize(v string) {
 }
 
 // GetType returns the Type field value
-func (o *ToplistWidgetDefinition) GetType() string {
+func (o *ToplistWidgetDefinition) GetType() ToplistWidgetDefinitionType {
 	if o == nil {
-		var ret string
+		var ret ToplistWidgetDefinitionType
 		return ret
 	}
 
@@ -211,7 +210,7 @@ func (o *ToplistWidgetDefinition) GetType() string {
 
 // GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
-func (o *ToplistWidgetDefinition) GetTypeOk() (*string, bool) {
+func (o *ToplistWidgetDefinition) GetTypeOk() (*ToplistWidgetDefinitionType, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -219,7 +218,7 @@ func (o *ToplistWidgetDefinition) GetTypeOk() (*string, bool) {
 }
 
 // SetType sets field value
-func (o *ToplistWidgetDefinition) SetType(v string) {
+func (o *ToplistWidgetDefinition) SetType(v ToplistWidgetDefinitionType) {
 	o.Type = v
 }
 
@@ -244,11 +243,6 @@ func (o ToplistWidgetDefinition) MarshalJSON() ([]byte, error) {
 		toSerialize["type"] = o.Type
 	}
 	return json.Marshal(toSerialize)
-}
-
-// AsWidgetDefinition wraps this instance of ToplistWidgetDefinition in WidgetDefinition
-func (s *ToplistWidgetDefinition) AsWidgetDefinition() WidgetDefinition {
-	return WidgetDefinition{WidgetDefinitionInterface: s}
 }
 
 type NullableToplistWidgetDefinition struct {

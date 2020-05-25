@@ -12,7 +12,11 @@ import (
 	"encoding/json"
 )
 
-// WidgetDisplayType Type of display to use for the request. Available values are area, bars, or line.
+import (
+	"fmt"
+)
+
+// WidgetDisplayType Type of display to use for the request.
 type WidgetDisplayType string
 
 // List of WidgetDisplayType
@@ -21,6 +25,23 @@ const (
 	WIDGETDISPLAYTYPE_BARS WidgetDisplayType = "bars"
 	WIDGETDISPLAYTYPE_LINE WidgetDisplayType = "line"
 )
+
+func (v *WidgetDisplayType) UnmarshalJSON(src []byte) error {
+	var value string
+	err := json.Unmarshal(src, &value)
+	if err != nil {
+		return err
+	}
+	enumTypeValue := WidgetDisplayType(value)
+	for _, existing := range []WidgetDisplayType{"area", "bars", "line"} {
+		if existing == enumTypeValue {
+			*v = enumTypeValue
+			return nil
+		}
+	}
+
+	return fmt.Errorf("%+v is not a valid WidgetDisplayType", *v)
+}
 
 // Ptr returns reference to WidgetDisplayType value
 func (v WidgetDisplayType) Ptr() *WidgetDisplayType {

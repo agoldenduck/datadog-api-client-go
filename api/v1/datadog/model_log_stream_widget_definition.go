@@ -12,14 +12,16 @@ import (
 	"encoding/json"
 )
 
-// LogStreamWidgetDefinition The Log Stream displays a log flow matching the defined query. Only available on FREE layout dashboards
+// LogStreamWidgetDefinition The Log Stream displays a log flow matching the defined query. Only available on FREE layout dashboards.
 type LogStreamWidgetDefinition struct {
-	// Which columns to display on the widget
+	// Which columns to display on the widget.
 	Columns *[]string `json:"columns,omitempty"`
-	// An array of index names to query in the stream.
-	Indexes        *[]string             `json:"indexes,omitempty"`
+	// An array of index names to query in the stream. Use [] to query all indexes at once.
+	Indexes *[]string `json:"indexes,omitempty"`
+	// ID of the log set to use.
+	Logset         *string               `json:"logset,omitempty"`
 	MessageDisplay *WidgetMessageDisplay `json:"message_display,omitempty"`
-	// Query to filter the log stream with
+	// Query to filter the log stream with.
 	Query *string `json:"query,omitempty"`
 	// Whether to show the date column or not
 	ShowDateColumn *bool `json:"show_date_column,omitempty"`
@@ -27,20 +29,19 @@ type LogStreamWidgetDefinition struct {
 	ShowMessageColumn *bool            `json:"show_message_column,omitempty"`
 	Sort              *WidgetFieldSort `json:"sort,omitempty"`
 	Time              *WidgetTime      `json:"time,omitempty"`
-	// Title of the widget
+	// Title of the widget.
 	Title      *string          `json:"title,omitempty"`
 	TitleAlign *WidgetTextAlign `json:"title_align,omitempty"`
-	// Size of the title
-	TitleSize *string `json:"title_size,omitempty"`
-	// Type of the widget
-	Type string `json:"type"`
+	// Size of the title.
+	TitleSize *string                       `json:"title_size,omitempty"`
+	Type      LogStreamWidgetDefinitionType `json:"type"`
 }
 
 // NewLogStreamWidgetDefinition instantiates a new LogStreamWidgetDefinition object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewLogStreamWidgetDefinition(type_ string) *LogStreamWidgetDefinition {
+func NewLogStreamWidgetDefinition(type_ LogStreamWidgetDefinitionType) *LogStreamWidgetDefinition {
 	this := LogStreamWidgetDefinition{}
 	this.Type = type_
 	return &this
@@ -51,7 +52,7 @@ func NewLogStreamWidgetDefinition(type_ string) *LogStreamWidgetDefinition {
 // but it doesn't guarantee that properties required by API are set
 func NewLogStreamWidgetDefinitionWithDefaults() *LogStreamWidgetDefinition {
 	this := LogStreamWidgetDefinition{}
-	var type_ string = "log_stream"
+	var type_ LogStreamWidgetDefinitionType = "log_stream"
 	this.Type = type_
 	return &this
 }
@@ -118,6 +119,38 @@ func (o *LogStreamWidgetDefinition) HasIndexes() bool {
 // SetIndexes gets a reference to the given []string and assigns it to the Indexes field.
 func (o *LogStreamWidgetDefinition) SetIndexes(v []string) {
 	o.Indexes = &v
+}
+
+// GetLogset returns the Logset field value if set, zero value otherwise.
+func (o *LogStreamWidgetDefinition) GetLogset() string {
+	if o == nil || o.Logset == nil {
+		var ret string
+		return ret
+	}
+	return *o.Logset
+}
+
+// GetLogsetOk returns a tuple with the Logset field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *LogStreamWidgetDefinition) GetLogsetOk() (*string, bool) {
+	if o == nil || o.Logset == nil {
+		return nil, false
+	}
+	return o.Logset, true
+}
+
+// HasLogset returns a boolean if a field has been set.
+func (o *LogStreamWidgetDefinition) HasLogset() bool {
+	if o != nil && o.Logset != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetLogset gets a reference to the given string and assigns it to the Logset field.
+func (o *LogStreamWidgetDefinition) SetLogset(v string) {
+	o.Logset = &v
 }
 
 // GetMessageDisplay returns the MessageDisplay field value if set, zero value otherwise.
@@ -409,9 +442,9 @@ func (o *LogStreamWidgetDefinition) SetTitleSize(v string) {
 }
 
 // GetType returns the Type field value
-func (o *LogStreamWidgetDefinition) GetType() string {
+func (o *LogStreamWidgetDefinition) GetType() LogStreamWidgetDefinitionType {
 	if o == nil {
-		var ret string
+		var ret LogStreamWidgetDefinitionType
 		return ret
 	}
 
@@ -420,7 +453,7 @@ func (o *LogStreamWidgetDefinition) GetType() string {
 
 // GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
-func (o *LogStreamWidgetDefinition) GetTypeOk() (*string, bool) {
+func (o *LogStreamWidgetDefinition) GetTypeOk() (*LogStreamWidgetDefinitionType, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -428,7 +461,7 @@ func (o *LogStreamWidgetDefinition) GetTypeOk() (*string, bool) {
 }
 
 // SetType sets field value
-func (o *LogStreamWidgetDefinition) SetType(v string) {
+func (o *LogStreamWidgetDefinition) SetType(v LogStreamWidgetDefinitionType) {
 	o.Type = v
 }
 
@@ -439,6 +472,9 @@ func (o LogStreamWidgetDefinition) MarshalJSON() ([]byte, error) {
 	}
 	if o.Indexes != nil {
 		toSerialize["indexes"] = o.Indexes
+	}
+	if o.Logset != nil {
+		toSerialize["logset"] = o.Logset
 	}
 	if o.MessageDisplay != nil {
 		toSerialize["message_display"] = o.MessageDisplay
@@ -471,11 +507,6 @@ func (o LogStreamWidgetDefinition) MarshalJSON() ([]byte, error) {
 		toSerialize["type"] = o.Type
 	}
 	return json.Marshal(toSerialize)
-}
-
-// AsWidgetDefinition wraps this instance of LogStreamWidgetDefinition in WidgetDefinition
-func (s *LogStreamWidgetDefinition) AsWidgetDefinition() WidgetDefinition {
-	return WidgetDefinition{WidgetDefinitionInterface: s}
 }
 
 type NullableLogStreamWidgetDefinition struct {

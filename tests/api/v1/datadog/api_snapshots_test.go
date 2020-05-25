@@ -11,74 +11,80 @@ import (
 	"testing"
 
 	"github.com/DataDog/datadog-api-client-go/api/v1/datadog"
-	"github.com/stretchr/testify/assert"
+	"github.com/DataDog/datadog-api-client-go/tests"
 )
 
 func TestGetGraphSnapshot(t *testing.T) {
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, finish := WithRecorder(WithTestAuth(context.Background()), t)
+	defer finish()
+	assert := tests.Assert(ctx, t)
 
-	start := TESTCLOCK.Now().Unix()
+	start := tests.ClockFromContext(ctx).Now().Unix()
 	end := start + 24*60*60
 	graphDef := `{"requests": [{"q": "system.load.1{*}"}]}`
 	metricQuery := "system.load.1{*}"
 	eventQuery := "successful builds"
 
 	// Try to create a snapshot with a metric_query (and an optional event_query)
-	snapshot, httpresp, err := TESTAPICLIENT.SnapshotsApi.GetGraphSnapshot(TESTAUTH).MetricQuery(metricQuery).Start(start).End(end).EventQuery(eventQuery).Execute()
+	snapshot, httpresp, err := Client(ctx).SnapshotsApi.GetGraphSnapshot(ctx).MetricQuery(metricQuery).Start(start).End(end).EventQuery(eventQuery).Execute()
 	if err != nil {
 		t.Fatalf("Error creating Snapshot: Response %s: %v", err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	assert.Equal(t, httpresp.StatusCode, 200)
+	assert.Equal(httpresp.StatusCode, 200)
 
-	assert.Equal(t, snapshot.GetGraphDef(), graphDef)
-	assert.Equal(t, snapshot.GetMetricQuery(), metricQuery)
-	assert.NotEmpty(t, snapshot.GetSnapshotUrl())
+	assert.Equal(snapshot.GetGraphDef(), graphDef)
+	assert.Equal(snapshot.GetMetricQuery(), metricQuery)
+	assert.NotEmpty(snapshot.GetSnapshotUrl())
 
 	// Try to create a snapshot with a graph_def
-	snapshot, httpresp, err = TESTAPICLIENT.SnapshotsApi.GetGraphSnapshot(TESTAUTH).GraphDef(graphDef).Start(start).End(end).Execute()
+	snapshot, httpresp, err = Client(ctx).SnapshotsApi.GetGraphSnapshot(ctx).GraphDef(graphDef).Start(start).End(end).Execute()
 	if err != nil {
 		t.Fatalf("Error creating Snapshot: Response %s: %v", err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	assert.Equal(t, httpresp.StatusCode, 200)
+	assert.Equal(httpresp.StatusCode, 200)
 
-	assert.Equal(t, snapshot.GetGraphDef(), graphDef)
-	assert.NotEmpty(t, snapshot.GetSnapshotUrl())
+	assert.Equal(snapshot.GetGraphDef(), graphDef)
+	assert.NotEmpty(snapshot.GetSnapshotUrl())
 }
 
 func TestGetGraphSnapshotRequiredParams(t *testing.T) {
+	ctx, finish := WithRecorder(WithTestAuth(context.Background()), t)
+	defer finish()
+	assert := tests.Assert(ctx, t)
+
 	var start int64 = 1
 	var end int64 = 2
 	metricQuery := "query"
 
-
-	_, _, err := TESTAPICLIENT.SnapshotsApi.GetGraphSnapshot(TESTAUTH).MetricQuery(metricQuery).End(end).Execute()
-	assert.Contains(t, err.Error(), "start is required")
-	_, _, err = TESTAPICLIENT.SnapshotsApi.GetGraphSnapshot(TESTAUTH).MetricQuery(metricQuery).Start(start).Execute()
-	assert.Contains(t, err.Error(), "end is required")
+	_, _, err := Client(ctx).SnapshotsApi.GetGraphSnapshot(ctx).MetricQuery(metricQuery).End(end).Execute()
+	assert.Contains(err.Error(), "start is required")
+	_, _, err = Client(ctx).SnapshotsApi.GetGraphSnapshot(ctx).MetricQuery(metricQuery).Start(start).Execute()
+	assert.Contains(err.Error(), "end is required")
 }
 
 func TestGraphGetErrors(t *testing.T) {
-	// Setup the Client we'll use to interact with the Test account
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, close := tests.WithTestSpan(context.Background(), t)
+	defer close()
 
-	testCases := []struct {
-		Name               string
-		Ctx                context.Context
+	testCases := map[string]struct {
+		Ctx                func(context.Context) context.Context
 		ExpectedStatusCode int
 	}{
-		{"400 Bad Request", TESTAUTH, 400},
-		{"403 Forbidden", fake_auth, 403},
+		"400 Bad Request": {WithTestAuth, 400},
+		"403 Forbidden":   {WithFakeAuth, 403},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			_, httpresp, err := TESTAPICLIENT.SnapshotsApi.GetGraphSnapshot(tc.Ctx).Start(345).End(123).Execute()
-			assert.Equal(t, tc.ExpectedStatusCode, httpresp.StatusCode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, finish := WithRecorder(tc.Ctx(ctx), t)
+			defer finish()
+			assert := tests.Assert(ctx, t)
+
+			_, httpresp, err := Client(ctx).SnapshotsApi.GetGraphSnapshot((ctx)).Start(345).End(123).Execute()
+			assert.Equal(tc.ExpectedStatusCode, httpresp.StatusCode)
 			apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.APIErrorResponse)
-			assert.True(t, ok)
-			assert.NotEmpty(t, apiError.GetErrors())
+			assert.True(ok)
+			assert.NotEmpty(apiError.GetErrors())
 		})
 	}
 }

@@ -5,27 +5,27 @@
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
 **DisplayFormat** | Pointer to [**WidgetServiceSummaryDisplayFormat**](WidgetServiceSummaryDisplayFormat.md) |  | [optional] 
-**Env** | Pointer to **string** | APM environment | 
-**Service** | Pointer to **string** | APM service | 
-**ShowBreakdown** | Pointer to **bool** | Whether to show the latency breakdown or not | [optional] 
-**ShowDistribution** | Pointer to **bool** | Whether to show the latency distribution or not | [optional] 
-**ShowErrors** | Pointer to **bool** | Whether to show the error metrics or not | [optional] 
-**ShowHits** | Pointer to **bool** | Whether to show the hits metrics or not | [optional] 
-**ShowLatency** | Pointer to **bool** | Whether to show the latency metrics or not | [optional] 
-**ShowResourceList** | Pointer to **bool** | Whether to show the resource list or not | [optional] 
+**Env** | Pointer to **string** | APM environment. | 
+**Service** | Pointer to **string** | APM service. | 
+**ShowBreakdown** | Pointer to **bool** | Whether to show the latency breakdown or not. | [optional] 
+**ShowDistribution** | Pointer to **bool** | Whether to show the latency distribution or not. | [optional] 
+**ShowErrors** | Pointer to **bool** | Whether to show the error metrics or not. | [optional] 
+**ShowHits** | Pointer to **bool** | Whether to show the hits metrics or not. | [optional] 
+**ShowLatency** | Pointer to **bool** | Whether to show the latency metrics or not. | [optional] 
+**ShowResourceList** | Pointer to **bool** | Whether to show the resource list or not. | [optional] 
 **SizeFormat** | Pointer to [**WidgetSizeFormat**](WidgetSizeFormat.md) |  | [optional] 
-**SpanName** | Pointer to **string** | APM span name | 
+**SpanName** | Pointer to **string** | APM span name. | 
 **Time** | Pointer to [**WidgetTime**](WidgetTime.md) |  | [optional] 
-**Title** | Pointer to **string** | Title of the widget | [optional] 
+**Title** | Pointer to **string** | Title of the widget. | [optional] 
 **TitleAlign** | Pointer to [**WidgetTextAlign**](WidgetTextAlign.md) |  | [optional] 
-**TitleSize** | Pointer to **string** | Size of the title | [optional] 
-**Type** | Pointer to **string** | Type of the widget | [readonly] [default to "trace_service"]
+**TitleSize** | Pointer to **string** | Size of the title. | [optional] 
+**Type** | Pointer to [**ServiceSummaryWidgetDefinitionType**](ServiceSummaryWidgetDefinitionType.md) |  | [default to "trace_service"]
 
 ## Methods
 
 ### NewServiceSummaryWidgetDefinition
 
-`func NewServiceSummaryWidgetDefinition(env string, service string, spanName string, type_ string, ) *ServiceSummaryWidgetDefinition`
+`func NewServiceSummaryWidgetDefinition(env string, service string, spanName string, type_ ServiceSummaryWidgetDefinitionType, ) *ServiceSummaryWidgetDefinition`
 
 NewServiceSummaryWidgetDefinition instantiates a new ServiceSummaryWidgetDefinition object
 This constructor will assign default values to properties that have it defined,
@@ -402,30 +402,24 @@ HasTitleSize returns a boolean if a field has been set.
 
 ### GetType
 
-`func (o *ServiceSummaryWidgetDefinition) GetType() string`
+`func (o *ServiceSummaryWidgetDefinition) GetType() ServiceSummaryWidgetDefinitionType`
 
 GetType returns the Type field if non-nil, zero value otherwise.
 
 ### GetTypeOk
 
-`func (o *ServiceSummaryWidgetDefinition) GetTypeOk() (*string, bool)`
+`func (o *ServiceSummaryWidgetDefinition) GetTypeOk() (*ServiceSummaryWidgetDefinitionType, bool)`
 
 GetTypeOk returns a tuple with the Type field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetType
 
-`func (o *ServiceSummaryWidgetDefinition) SetType(v string)`
+`func (o *ServiceSummaryWidgetDefinition) SetType(v ServiceSummaryWidgetDefinitionType)`
 
 SetType sets Type field to given value.
 
 
-
-### AsWidgetDefinition
-
-`func (s *ServiceSummaryWidgetDefinition) AsWidgetDefinition() WidgetDefinition`
-
-Convenience method to wrap this instance of ServiceSummaryWidgetDefinition in WidgetDefinition
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

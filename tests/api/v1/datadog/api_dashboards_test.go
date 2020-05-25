@@ -14,21 +14,23 @@ import (
 	"testing"
 
 	"github.com/DataDog/datadog-api-client-go/api/v1/datadog"
-	"github.com/stretchr/testify/assert"
+	"github.com/DataDog/datadog-api-client-go/tests"
 )
 
 func TestDashboardLifecycle(t *testing.T) {
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, finish := WithRecorder(WithTestAuth(context.Background()), t)
+	defer finish()
+	assert := tests.Assert(ctx, t)
 
 	// create SLO for referencing in SLO widget (we're borrowing these from api_slo_test.go)
-	sloResp, httpresp, err := TESTAPICLIENT.ServiceLevelObjectivesApi.CreateSLO(TESTAUTH).Body(testEventSLO).Execute()
+	testEventSLO := getTestEventSLO(ctx, t)
+	sloResp, httpresp, err := Client(ctx).ServiceLevelObjectivesApi.CreateSLO(ctx).Body(testEventSLO).Execute()
 	if err != nil {
-		t.Fatalf("Error creating SLO %v for testing Dashboard SLO widget: Response %s: %v", testMonitorSLO, err.Error(), err)
+		t.Fatalf("Error creating SLO %v for testing Dashboard SLO widget: Response %s: %v", testEventSLO, err.Error(), err)
 	}
 	slo := sloResp.GetData()[0]
-	defer deleteSLOIfExists(slo.GetId())
-	assert.Equal(t, httpresp.StatusCode, 200)
+	defer deleteSLOIfExists(ctx, slo.GetId())
+	assert.Equal(httpresp.StatusCode, 200)
 
 	widgetTime := datadog.NewWidgetTimeWithDefaults()
 	widgetTime.SetLiveSpan(datadog.WIDGETLIVESPAN_PAST_FIFTEEN_MINUTES)
@@ -58,7 +60,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	alertGraphDefinition.SetTime(*widgetTime)
 
 	alertGraphWidget := datadog.NewWidgetWithDefaults()
-	alertGraphWidget.SetDefinition(alertGraphDefinition.AsWidgetDefinition())
+	alertGraphWidget.SetDefinition(datadog.AlertGraphWidgetDefinitionAsWidgetDefinition(alertGraphDefinition))
 
 	// Alert Value Widget
 	alertValueDefinition := datadog.NewAlertValueWidgetDefinitionWithDefaults()
@@ -71,7 +73,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	alertValueDefinition.SetTitleAlign(datadog.WIDGETTEXTALIGN_RIGHT)
 
 	alertValueWidget := datadog.NewWidgetWithDefaults()
-	alertValueWidget.SetDefinition(alertValueDefinition.AsWidgetDefinition())
+	alertValueWidget.SetDefinition(datadog.AlertValueWidgetDefinitionAsWidgetDefinition(alertValueDefinition))
 
 	// Change Widget
 	changeWidgetRequest := datadog.NewChangeWidgetRequest()
@@ -93,7 +95,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	})
 
 	changeWidget := datadog.NewWidgetWithDefaults()
-	changeWidget.SetDefinition(changeWidgetDefinition.AsWidgetDefinition())
+	changeWidget.SetDefinition(datadog.ChangeWidgetDefinitionAsWidgetDefinition(changeWidgetDefinition))
 
 	// Check Status Widget
 	checkStatusWidgetDefinition := datadog.NewCheckStatusWidgetDefinitionWithDefaults()
@@ -108,7 +110,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	checkStatusWidgetDefinition.SetTime(*widgetTime)
 
 	checkStatusWidget := datadog.NewWidgetWithDefaults()
-	checkStatusWidget.SetDefinition(checkStatusWidgetDefinition.AsWidgetDefinition())
+	checkStatusWidget.SetDefinition(datadog.CheckStatusWidgetDefinitionAsWidgetDefinition(checkStatusWidgetDefinition))
 
 	// Distribution Widget
 	distributionWidgetDefinition := datadog.NewDistributionWidgetDefinitionWithDefaults()
@@ -130,7 +132,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	distributionWidgetDefinition.SetTitleSize("16")
 	distributionWidgetDefinition.SetTime(*widgetTime)
 
-	distributionWidget := datadog.NewWidget(distributionWidgetDefinition.AsWidgetDefinition())
+	distributionWidget := datadog.NewWidget(datadog.DistributionWidgetDefinitionAsWidgetDefinition(distributionWidgetDefinition))
 
 	// Event Stream Widget ONLY AVAILABLE ON FREE LAYOUTS
 	eventStreamWidgetDefinition := datadog.NewEventStreamWidgetDefinitionWithDefaults()
@@ -142,7 +144,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	eventStreamWidgetDefinition.SetTime(*widgetTimePastOneDay)
 
 	eventStreamWidget := datadog.NewWidgetWithDefaults()
-	eventStreamWidget.SetDefinition(eventStreamWidgetDefinition.AsWidgetDefinition())
+	eventStreamWidget.SetDefinition(datadog.EventStreamWidgetDefinitionAsWidgetDefinition(eventStreamWidgetDefinition))
 	eventStreamWidget.SetLayout(*widgetLayout)
 
 	// Event Timeline Widget ONLY AVAILABLE ON FREE LAYOUTS
@@ -154,7 +156,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	eventTimelineWidgetDefinition.SetTime(*widgetTimePastOneMonth)
 
 	eventTimelineWidget := datadog.NewWidgetWithDefaults()
-	eventTimelineWidget.SetDefinition(eventTimelineWidgetDefinition.AsWidgetDefinition())
+	eventTimelineWidget.SetDefinition(datadog.EventTimelineWidgetDefinitionAsWidgetDefinition(eventTimelineWidgetDefinition))
 	eventTimelineWidget.SetLayout(*widgetLayout)
 
 	// Free Text Widget ONLY AVAILABLE ON FREE LAYOUTS
@@ -165,7 +167,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	freeTextWidgetDefinition.SetTextAlign(datadog.WIDGETTEXTALIGN_CENTER)
 
 	freeTextWidget := datadog.NewWidgetWithDefaults()
-	freeTextWidget.SetDefinition(freeTextWidgetDefinition.AsWidgetDefinition())
+	freeTextWidget.SetDefinition(datadog.FreeTextWidgetDefinitionAsWidgetDefinition(freeTextWidgetDefinition))
 	freeTextWidget.SetLayout(*widgetLayout)
 
 	// Group Widget
@@ -176,10 +178,10 @@ func TestDashboardLifecycle(t *testing.T) {
 	groupWidgetDefinition.SetLayoutType(datadog.WIDGETLAYOUTTYPE_ORDERED)
 	groupWidgetDefinition.SetTitle("Test Group Widget")
 	groupWidgetDefinition.SetWidgets([]datadog.Widget{
-		*datadog.NewWidget(groupNoteWidgetDefinition.AsWidgetDefinition()),
+		*datadog.NewWidget(datadog.NoteWidgetDefinitionAsWidgetDefinition(groupNoteWidgetDefinition)),
 	})
 
-	groupWidget := datadog.NewWidget(groupWidgetDefinition.AsWidgetDefinition())
+	groupWidget := datadog.NewWidget(datadog.GroupWidgetDefinitionAsWidgetDefinition(groupWidgetDefinition))
 
 	// HeatMap Widget
 	heatMapWidgetDefinition := datadog.NewHeatMapWidgetDefinitionWithDefaults()
@@ -210,7 +212,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	heatMapWidgetDefinition.SetShowLegend(true)
 	heatMapWidgetDefinition.SetLegendSize(datadog.WIDGETLEGENDSIZE_FOUR)
 
-	heatMapWidget := datadog.NewWidget(heatMapWidgetDefinition.AsWidgetDefinition())
+	heatMapWidget := datadog.NewWidget(datadog.HeatMapWidgetDefinitionAsWidgetDefinition(heatMapWidgetDefinition))
 
 	// HostMap Widget
 	hostMapWidgetDefinition := datadog.NewHostMapWidgetDefinitionWithDefaults()
@@ -233,13 +235,13 @@ func TestDashboardLifecycle(t *testing.T) {
 	hostMapWidgetDefinition.SetTitleAlign(datadog.WIDGETTEXTALIGN_CENTER)
 	hostMapWidgetDefinition.SetTitleSize("16")
 
-	hostMapWidget := datadog.NewWidget(hostMapWidgetDefinition.AsWidgetDefinition())
+	hostMapWidget := datadog.NewWidget(datadog.HostMapWidgetDefinitionAsWidgetDefinition(hostMapWidgetDefinition))
 
 	// Iframe Widget ONLY AVAILABLE ON FREE LAYOUTS
 	iFrameWidgetDefinition := datadog.NewIFrameWidgetDefinitionWithDefaults()
 	iFrameWidgetDefinition.SetUrl("https://datadoghq.com")
 
-	iFrameWidget := datadog.NewWidget(iFrameWidgetDefinition.AsWidgetDefinition())
+	iFrameWidget := datadog.NewWidget(datadog.IFrameWidgetDefinitionAsWidgetDefinition(iFrameWidgetDefinition))
 	iFrameWidget.SetLayout(*widgetLayout)
 
 	// Image Widget ONLY AVAILABLE ON FREE LAYOUTS
@@ -248,12 +250,13 @@ func TestDashboardLifecycle(t *testing.T) {
 	imageWidgetDefinition.SetSizing(datadog.WIDGETIMAGESIZING_CENTER)
 	imageWidgetDefinition.SetMargin(datadog.WIDGETMARGIN_LARGE)
 
-	imageWidget := datadog.NewWidget(imageWidgetDefinition.AsWidgetDefinition())
+	imageWidget := datadog.NewWidget(datadog.ImageWidgetDefinitionAsWidgetDefinition(imageWidgetDefinition))
 	imageWidget.SetLayout(*widgetLayout)
 
 	// LogStream ONLY AVAILABLE ON FREE LAYOUTS
 	logStreamWidgetDefinition := datadog.NewLogStreamWidgetDefinitionWithDefaults()
 	logStreamWidgetDefinition.SetIndexes([]string{"main"})
+	logStreamWidgetDefinition.SetLogset("106")
 	logStreamWidgetDefinition.SetQuery("Route XYZ failed")
 	logStreamWidgetDefinition.SetColumns([]string{"Route"})
 	logStreamWidgetDefinition.SetTitle("Test Logstream Widget")
@@ -265,7 +268,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	logStreamWidgetDefinition.SetShowMessageColumn(true)
 	logStreamWidgetDefinition.SetSort(datadog.WidgetFieldSort{Column: "Route", Order: datadog.WIDGETSORT_ASCENDING})
 
-	logStreamWidget := datadog.NewWidget(logStreamWidgetDefinition.AsWidgetDefinition())
+	logStreamWidget := datadog.NewWidget(datadog.LogStreamWidgetDefinitionAsWidgetDefinition(logStreamWidgetDefinition))
 	logStreamWidget.SetLayout(*widgetLayout)
 
 	// Monitor Summary ONLY AVAILABLE ON FREE LAYOUTS
@@ -280,8 +283,11 @@ func TestDashboardLifecycle(t *testing.T) {
 	monitorSummaryWidgetDefiniton.SetTitle("Test Monitor Summary Widget")
 	monitorSummaryWidgetDefiniton.SetTitleSize("16")
 	monitorSummaryWidgetDefiniton.SetTitleAlign(datadog.WIDGETTEXTALIGN_CENTER)
+	monitorSummaryWidgetDefiniton.SetStart(0)
+	monitorSummaryWidgetDefiniton.SetCount(5)
 
-	monitorSummaryWidget := datadog.NewWidget(monitorSummaryWidgetDefiniton.AsWidgetDefinition())
+
+	monitorSummaryWidget := datadog.NewWidget(datadog.MonitorSummaryWidgetDefinitionAsWidgetDefinition(monitorSummaryWidgetDefiniton))
 	monitorSummaryWidget.SetLayout(*widgetLayout)
 
 	// Note Widget
@@ -294,7 +300,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	noteWidgetDefinition.SetTickPos("4")
 	noteWidgetDefinition.SetTickEdge(datadog.WIDGETTICKEDGE_BOTTOM)
 
-	noteWidget := datadog.NewWidget(noteWidgetDefinition.AsWidgetDefinition())
+	noteWidget := datadog.NewWidget(datadog.NoteWidgetDefinitionAsWidgetDefinition(noteWidgetDefinition))
 
 	// Query Value Widget
 	queryValueWidgetDefinition := datadog.NewQueryValueWidgetDefinitionWithDefaults()
@@ -319,7 +325,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	queryValueWidgetDefinition.SetTitleSize("16")
 	queryValueWidgetDefinition.SetTime(*widgetTime)
 
-	queryValueWidget := datadog.NewWidget(queryValueWidgetDefinition.AsWidgetDefinition())
+	queryValueWidget := datadog.NewWidget(datadog.QueryValueWidgetDefinitionAsWidgetDefinition(queryValueWidgetDefinition))
 
 	// Scatter Plot Widget
 	scatterPlotWidgetDefinition := datadog.NewScatterPlotWidgetDefinitionWithDefaults()
@@ -340,7 +346,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	scatterPlotWidgetDefinition.SetTitleSize("16")
 	scatterPlotWidgetDefinition.SetTime(*widgetTime)
 
-	scatterPlotWidget := datadog.NewWidget(scatterPlotWidgetDefinition.AsWidgetDefinition())
+	scatterPlotWidget := datadog.NewWidget(datadog.ScatterPlotWidgetDefinitionAsWidgetDefinition(scatterPlotWidgetDefinition))
 
 	// SLO Widget
 	sloWidgetDefinition := datadog.NewSLOWidgetDefinitionWithDefaults()
@@ -355,7 +361,7 @@ func TestDashboardLifecycle(t *testing.T) {
 		datadog.WIDGETTIMEWINDOWS_SEVEN_DAYS,
 	})
 
-	sloWidget := datadog.NewWidget(sloWidgetDefinition.AsWidgetDefinition())
+	sloWidget := datadog.NewWidget(datadog.SLOWidgetDefinitionAsWidgetDefinition(sloWidgetDefinition))
 
 	// Service Map Widget
 	serviceMapWidgetDefinition := datadog.NewServiceMapWidgetDefinitionWithDefaults()
@@ -365,7 +371,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	serviceMapWidgetDefinition.SetTitleAlign(datadog.WIDGETTEXTALIGN_CENTER)
 	serviceMapWidgetDefinition.SetTitleSize("16")
 
-	serviceMapWidget := datadog.NewWidget(serviceMapWidgetDefinition.AsWidgetDefinition())
+	serviceMapWidget := datadog.NewWidget(datadog.ServiceMapWidgetDefinitionAsWidgetDefinition(serviceMapWidgetDefinition))
 
 	// Service Summary Widget
 	serviceSummaryWidgetDefinition := datadog.NewServiceSummaryWidgetDefinitionWithDefaults()
@@ -385,7 +391,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	serviceSummaryWidgetDefinition.SetTitleAlign(datadog.WIDGETTEXTALIGN_CENTER)
 	serviceSummaryWidgetDefinition.SetTime(*widgetTimePastOneHour)
 
-	serviceSummaryWidget := datadog.NewWidget(serviceSummaryWidgetDefinition.AsWidgetDefinition())
+	serviceSummaryWidget := datadog.NewWidget(datadog.ServiceSummaryWidgetDefinitionAsWidgetDefinition(serviceSummaryWidgetDefinition))
 	serviceSummaryWidget.SetLayout(*widgetLayout)
 
 	// Table Widget
@@ -410,13 +416,13 @@ func TestDashboardLifecycle(t *testing.T) {
 	tableWidgetDefinition.SetTitleSize("16")
 	tableWidgetDefinition.SetTime(*widgetTime)
 
-	tableWidget := datadog.NewWidget(tableWidgetDefinition.AsWidgetDefinition())
+	tableWidget := datadog.NewWidget(datadog.TableWidgetDefinitionAsWidgetDefinition(tableWidgetDefinition))
 
 	// Timeseries Widget
 	timeseriesWidgetDefinition := datadog.NewTimeseriesWidgetDefinitionWithDefaults()
 	timeseriesWidgetDefinition.SetRequests([]datadog.TimeseriesWidgetRequest{{
 		Q: datadog.PtrString("avg:system.load.1{*}"),
-		Style: &datadog.TimeseriesWidgetRequestStyle{
+		Style: &datadog.WidgetRequestStyle{
 			Palette:   datadog.PtrString("dog_classic"),
 			LineType:  datadog.WIDGETLINETYPE_DASHED.Ptr(),
 			LineWidth: datadog.WIDGETLINEWIDTH_THICK.Ptr(),
@@ -449,7 +455,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	timeseriesWidgetDefinition.SetShowLegend(true)
 	timeseriesWidgetDefinition.SetLegendSize(datadog.WIDGETLEGENDSIZE_SIXTEEN)
 
-	timeseriesWidget := datadog.NewWidget(timeseriesWidgetDefinition.AsWidgetDefinition())
+	timeseriesWidget := datadog.NewWidget(datadog.TimeseriesWidgetDefinitionAsWidgetDefinition(timeseriesWidgetDefinition))
 
 	// Timeseries Widget with Process query
 	timeseriesWidgetDefinitionProcessQuery := datadog.NewTimeseriesWidgetDefinitionWithDefaults()
@@ -460,7 +466,7 @@ func TestDashboardLifecycle(t *testing.T) {
 			Limit:    datadog.PtrInt64(10),
 			SearchBy: datadog.PtrString("editor"),
 		},
-		Style: &datadog.TimeseriesWidgetRequestStyle{
+		Style: &datadog.WidgetRequestStyle{
 			Palette:   datadog.PtrString("dog_classic"),
 			LineType:  datadog.WIDGETLINETYPE_DASHED.Ptr(),
 			LineWidth: datadog.WIDGETLINEWIDTH_THICK.Ptr(),
@@ -492,7 +498,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	timeseriesWidgetDefinitionProcessQuery.SetShowLegend(true)
 	timeseriesWidgetDefinitionProcessQuery.SetLegendSize(datadog.WIDGETLEGENDSIZE_SIXTEEN)
 
-	timeseriesWidgetProcessQuery := datadog.NewWidget(timeseriesWidgetDefinitionProcessQuery.AsWidgetDefinition())
+	timeseriesWidgetProcessQuery := datadog.NewWidget(datadog.TimeseriesWidgetDefinitionAsWidgetDefinition(timeseriesWidgetDefinitionProcessQuery))
 
 	// Timeseries Widget with Log query (APM/Log/Network/Rum share schemas, so only test one)
 	timeseriesWidgetDefinitionLogQuery := datadog.NewTimeseriesWidgetDefinitionWithDefaults()
@@ -514,7 +520,7 @@ func TestDashboardLifecycle(t *testing.T) {
 				},
 			}},
 		},
-		Style: &datadog.TimeseriesWidgetRequestStyle{
+		Style: &datadog.WidgetRequestStyle{
 			Palette:   datadog.PtrString("dog_classic"),
 			LineType:  datadog.WIDGETLINETYPE_DASHED.Ptr(),
 			LineWidth: datadog.WIDGETLINEWIDTH_THICK.Ptr(),
@@ -542,7 +548,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	timeseriesWidgetDefinitionLogQuery.SetShowLegend(true)
 	timeseriesWidgetDefinitionLogQuery.SetLegendSize(datadog.WIDGETLEGENDSIZE_SIXTEEN)
 
-	timeseriesWidgetLogQuery := datadog.NewWidget(timeseriesWidgetDefinitionLogQuery.AsWidgetDefinition())
+	timeseriesWidgetLogQuery := datadog.NewWidget(datadog.TimeseriesWidgetDefinitionAsWidgetDefinition(timeseriesWidgetDefinitionLogQuery))
 
 	// Timeseries Widget with Event query
 	timeseriesWidgetDefinitionEventQuery := datadog.NewTimeseriesWidgetDefinitionWithDefaults()
@@ -551,7 +557,7 @@ func TestDashboardLifecycle(t *testing.T) {
 			Search:        "Build failure",
 			TagsExecution: "build",
 		},
-		Style: &datadog.TimeseriesWidgetRequestStyle{
+		Style: &datadog.WidgetRequestStyle{
 			Palette:   datadog.PtrString("dog_classic"),
 			LineType:  datadog.WIDGETLINETYPE_DASHED.Ptr(),
 			LineWidth: datadog.WIDGETLINEWIDTH_THICK.Ptr()},
@@ -578,7 +584,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	timeseriesWidgetDefinitionEventQuery.SetShowLegend(true)
 	timeseriesWidgetDefinitionEventQuery.SetLegendSize(datadog.WIDGETLEGENDSIZE_SIXTEEN)
 
-	timeseriesWidgetEventQuery := datadog.NewWidget(timeseriesWidgetDefinitionEventQuery.AsWidgetDefinition())
+	timeseriesWidgetEventQuery := datadog.NewWidget(datadog.TimeseriesWidgetDefinitionAsWidgetDefinition(timeseriesWidgetDefinitionEventQuery))
 
 	// Toplist Widget
 	toplistWidgetDefinition := datadog.NewToplistWidgetDefinitionWithDefaults()
@@ -598,7 +604,7 @@ func TestDashboardLifecycle(t *testing.T) {
 	toplistWidgetDefinition.SetTitleSize("16")
 	toplistWidgetDefinition.SetTime(*widgetTime)
 
-	toplistWidget := datadog.NewWidget(toplistWidgetDefinition.AsWidgetDefinition())
+	toplistWidget := datadog.NewWidget(datadog.ToplistWidgetDefinitionAsWidgetDefinition(toplistWidgetDefinition))
 
 	// Template Variables
 	templateVariable := datadog.NewDashboardTemplateVariablesWithDefaults()
@@ -639,58 +645,55 @@ func TestDashboardLifecycle(t *testing.T) {
 	dashboard := datadog.NewDashboardWithDefaults()
 	dashboard.SetLayoutType(datadog.DASHBOARDLAYOUTTYPE_ORDERED)
 	dashboard.SetWidgets(orderedWidgetList)
-	dashboard.SetTitle("Go Client Test ORDERED Dashboard")
+	dashboard.SetTitle(fmt.Sprintf("%s-ordered", *tests.UniqueEntityName(ctx, t)))
 	dashboard.SetDescription("Test dashboard for Go client")
 	dashboard.SetIsReadOnly(false)
 	dashboard.SetTemplateVariables([]datadog.DashboardTemplateVariables{*templateVariable})
 	dashboard.SetTemplateVariablePresets([]datadog.DashboardTemplateVariablePreset{*dashboardTemplateVariablePreset})
 	dashboard.SetNotifyList([]string{"test@datadoghq.com"})
 
-	createdDashboard, httpresp, err := TESTAPICLIENT.DashboardsApi.CreateDashboard(TESTAUTH).Body(*dashboard).Execute()
+	createdDashboard, httpresp, err := Client(ctx).DashboardsApi.CreateDashboard(ctx).Body(*dashboard).Execute()
 	if err != nil {
 		t.Fatalf("Error creating dashboard: Response %s: %v", err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	defer deleteDashboard(createdDashboard.GetId())
-	assert.Equal(t, 200, httpresp.StatusCode)
+	defer deleteDashboard(ctx, createdDashboard.GetId())
+	assert.Equal(200, httpresp.StatusCode)
 
-	getDashboard, httpresp, err := TESTAPICLIENT.DashboardsApi.GetDashboard(TESTAUTH, createdDashboard.GetId()).Execute()
+	getDashboard, httpresp, err := Client(ctx).DashboardsApi.GetDashboard(ctx, createdDashboard.GetId()).Execute()
 	if err != nil {
 		t.Fatalf("Error creating dashboard: Response %s: %v", err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
+	assert.Equal(200, httpresp.StatusCode)
 
-	assert.Equal(t, getDashboard, createdDashboard)
+	assert.Equal(getDashboard, createdDashboard)
 
 	assertDashboardDefinition := func(dashboard *datadog.Dashboard, response datadog.Dashboard) {
 		// Assert root dashboard items on the create response
-		assert.Equal(t, dashboard.GetTitle(), response.GetTitle())
-		assert.Equal(t, dashboard.GetDescription(), response.GetDescription())
-		assert.Equal(t, dashboard.GetIsReadOnly(), response.GetIsReadOnly())
+		assert.Equal(dashboard.GetTitle(), response.GetTitle())
+		assert.Equal(dashboard.GetDescription(), response.GetDescription())
+		assert.Equal(dashboard.GetIsReadOnly(), response.GetIsReadOnly())
 		// The end of the url is a normalized version of the title, so lets just check the beginning of the URL
-		assert.True(t, strings.HasPrefix(response.GetUrl(), fmt.Sprintf("/dashboard/%s", response.GetId())))
-		assert.Greater(t, response.GetCreatedAt().Unix(), int64(0))
-		assert.Greater(t, response.GetModifiedAt().Unix(), int64(0))
-		assert.Greater(t, len(response.GetAuthorHandle()), 0)
-		assert.Equal(t, dashboard.GetLayoutType(), response.GetLayoutType())
-		assert.Equal(t, len(dashboard.GetNotifyList()), len(response.GetNotifyList()))
+		assert.True(strings.HasPrefix(response.GetUrl(), fmt.Sprintf("/dashboard/%s", response.GetId())))
+		assert.Greater(response.GetCreatedAt().Unix(), int64(0))
+		assert.Greater(response.GetModifiedAt().Unix(), int64(0))
+		assert.Greater(len(response.GetAuthorHandle()), 0)
+		assert.Equal(dashboard.GetLayoutType(), response.GetLayoutType())
+		assert.Equal(len(dashboard.GetNotifyList()), len(response.GetNotifyList()))
 
 		// Template Variables
-		assert.Equal(t, dashboard.GetTemplateVariables()[0], response.GetTemplateVariables()[0])
+		assert.Equal(dashboard.GetTemplateVariables()[0], response.GetTemplateVariables()[0])
 
 		for index, checkWidget := range response.GetWidgets() {
-			assert.True(t, checkWidget.GetId() > 0)
+			assert.True(checkWidget.GetId() > 0)
 			checkWidget.Id = nil
-			checkWidgetDefinition := checkWidget.GetDefinition().WidgetDefinitionInterface
-			if checkWidgetDefinition.GetType() == "group" {
-				def, ok := checkWidgetDefinition.(*datadog.GroupWidgetDefinition)
-				if !ok {
-					t.Fatal("Cast fail for GroupWidgetDefinition")
-				}
+			checkWidgetDefinition := checkWidget.GetDefinition()
+			checkWidgetInstance := checkWidgetDefinition.GetActualInstance()
+			if def, ok := checkWidgetInstance.(*datadog.GroupWidgetDefinition); ok {
 				for index := range def.GetWidgets() {
 					def.Widgets[index].Id = nil
 				}
 			}
-			assert.Equal(t, dashboard.GetWidgets()[index], checkWidget)
+			assert.Equal(dashboard.GetWidgets()[index], checkWidget)
 		}
 
 	}
@@ -711,24 +714,24 @@ func TestDashboardLifecycle(t *testing.T) {
 	freeDashboard := datadog.NewDashboardWithDefaults()
 	freeDashboard.SetLayoutType(datadog.DASHBOARDLAYOUTTYPE_FREE)
 	freeDashboard.SetWidgets(freeWidgetList)
-	freeDashboard.SetTitle("Go Client Test Free Dashboard")
+	freeDashboard.SetTitle(fmt.Sprintf("%s-free", *tests.UniqueEntityName(ctx, t)))
 	freeDashboard.SetDescription("Test Free layout dashboard for Go client")
 	freeDashboard.SetIsReadOnly(false)
 	freeDashboard.SetTemplateVariables([]datadog.DashboardTemplateVariables{*templateVariable})
 
-	createdFreeDashboard, httpresp, err := TESTAPICLIENT.DashboardsApi.CreateDashboard(TESTAUTH).Body(*freeDashboard).Execute()
+	createdFreeDashboard, httpresp, err := Client(ctx).DashboardsApi.CreateDashboard(ctx).Body(*freeDashboard).Execute()
 	if err != nil {
 		t.Fatalf("Error creating dashboard: Response %s: %v", err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	defer deleteDashboard(createdFreeDashboard.GetId())
-	assert.Equal(t, 200, httpresp.StatusCode)
+	defer deleteDashboard(ctx, createdFreeDashboard.GetId())
+	assert.Equal(200, httpresp.StatusCode)
 
-	getFreeDashboard, httpresp, err := TESTAPICLIENT.DashboardsApi.GetDashboard(TESTAUTH, createdFreeDashboard.GetId()).Execute()
+	getFreeDashboard, httpresp, err := Client(ctx).DashboardsApi.GetDashboard(ctx, createdFreeDashboard.GetId()).Execute()
 	if err != nil {
 		t.Fatalf("Error creating dashboard: Response %s: %v", err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
-	assert.Equal(t, getFreeDashboard, createdFreeDashboard)
+	assert.Equal(200, httpresp.StatusCode)
+	assert.Equal(getFreeDashboard, createdFreeDashboard)
 
 	assertDashboardDefinition(freeDashboard, createdFreeDashboard)
 
@@ -743,201 +746,210 @@ func TestDashboardLifecycle(t *testing.T) {
 
 	noteWidgetDefinition.SetContent("Updated content")
 	noteWidgetDefinition.SetFontSize("30")
-	noteWidget.SetDefinition(noteWidgetDefinition.AsWidgetDefinition())
+	noteWidget.SetDefinition(datadog.NoteWidgetDefinitionAsWidgetDefinition(noteWidgetDefinition))
 
 	noteWidgetIndex := 8
 	dashboardWidgets[noteWidgetIndex] = *noteWidget
 	dashboard.SetWidgets(dashboardWidgets)
 
-	updateResponse, httpresp, err := TESTAPICLIENT.DashboardsApi.UpdateDashboard(TESTAUTH, createdDashboard.GetId()).Body(*dashboard).Execute()
+	updateResponse, httpresp, err := Client(ctx).DashboardsApi.UpdateDashboard(ctx, createdDashboard.GetId()).Body(*dashboard).Execute()
 	if err != nil {
 		t.Fatalf("Error updating dashboard: Response %s: %v", err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
+	assert.Equal(200, httpresp.StatusCode)
 
-	assert.Equal(t, dashboard.GetTitle(), updateResponse.GetTitle())
+	assert.Equal(dashboard.GetTitle(), updateResponse.GetTitle())
 	v, ok := updateResponse.GetDescriptionOk()
-	assert.Nil(t, v)
-	assert.True(t, ok)
-	assert.Nil(t, updateResponse.GetTemplateVariables())
-	assert.Nil(t, updateResponse.GetTemplateVariablePresets())
-	assert.Nil(t, updateResponse.GetNotifyList())
+	assert.Nil(v)
+	assert.True(ok)
+	assert.Nil(updateResponse.GetTemplateVariables())
+	assert.Nil(updateResponse.GetTemplateVariablePresets())
+	assert.Nil(updateResponse.GetNotifyList())
 
 	updateResponse.Id = nil
 	updateResponse.GetWidgets()[0].Id = nil
-	assert.Equal(t, dashboard.GetWidgets()[0], updateResponse.GetWidgets()[0])
+	assert.Equal(dashboard.GetWidgets()[0], updateResponse.GetWidgets()[0])
 
 	foundWidget := false
 	for index, noteWidgetResponse := range updateResponse.GetWidgets() {
-		noteWidgetResponseDefinition := noteWidgetResponse.GetDefinition().WidgetDefinitionInterface
-		if noteWidgetResponseDefinition.GetType() == "note" {
-			def, ok := noteWidgetResponseDefinition.(*datadog.NoteWidgetDefinition)
-			if !ok {
-				t.Fatal("Cast fail for NoteWidgetDefinition")
-			}
+		noteWidgetResponseDefinition := noteWidgetResponse.GetDefinition()
+		noteWidgetResponseInstance := noteWidgetResponseDefinition.GetActualInstance()
+		if def, ok := noteWidgetResponseInstance.(*datadog.NoteWidgetDefinition); ok {
 			foundWidget = true
-			assert.Equal(t, "Updated content", def.GetContent())
-			assert.Equal(t, "30", def.GetFontSize())
-			assert.Equal(t, noteWidgetIndex, index)
+			assert.Equal("Updated content", def.GetContent())
+			assert.Equal("30", def.GetFontSize())
+			assert.Equal(noteWidgetIndex, index)
 			break
 		}
 	}
-	assert.True(t, foundWidget)
-	assert.True(t, len(updateResponse.GetWidgets()) > 1)
+	assert.True(foundWidget)
+	assert.True(len(updateResponse.GetWidgets()) > 1)
 
-	deleteResponse, httpresp, err := TESTAPICLIENT.DashboardsApi.DeleteDashboard(TESTAUTH, createdFreeDashboard.GetId()).Execute()
+	deleteResponse, httpresp, err := Client(ctx).DashboardsApi.DeleteDashboard(ctx, createdFreeDashboard.GetId()).Execute()
 	if err != nil {
 		t.Fatalf("Error deleting dashboard: Response %s: %v", err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
-	assert.Equal(t, createdFreeDashboard.GetId(), deleteResponse.GetDeletedDashboardId())
+	assert.Equal(200, httpresp.StatusCode)
+	assert.Equal(createdFreeDashboard.GetId(), deleteResponse.GetDeletedDashboardId())
 
 }
 
 func TestDashboardGetAll(t *testing.T) {
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
-	getAllResponse, httpresp, err := TESTAPICLIENT.DashboardsApi.ListDashboards(TESTAUTH).Execute()
+	ctx, finish := WithRecorder(WithTestAuth(context.Background()), t)
+	defer finish()
+	assert := tests.Assert(ctx, t)
+
+	getAllResponse, httpresp, err := Client(ctx).DashboardsApi.ListDashboards(ctx).Execute()
 	if err != nil {
 		t.Fatalf("Error getting all dashboards: Response %s: %v", err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
-	assert.True(t, len(getAllResponse.GetDashboards()) >= 1)
+	assert.Equal(200, httpresp.StatusCode)
+	assert.True(len(getAllResponse.GetDashboards()) >= 1)
 }
 
 func TestDashboardCreateErrors(t *testing.T) {
-	// Setup the Client we'll use to interact with the Test account
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, close := tests.WithTestSpan(context.Background(), t)
+	defer close()
 
-	testCases := []struct {
-		Name               string
-		Ctx                context.Context
+	testCases := map[string]struct {
+		Ctx                func(context.Context) context.Context
 		Body               datadog.Dashboard
 		ExpectedStatusCode int
 	}{
-		{"400 Bad Request", TESTAUTH, datadog.Dashboard{}, 400},
-		{"403 Forbidden", context.Background(), datadog.Dashboard{}, 403},
+		"400 Bad Request": {WithTestAuth, datadog.Dashboard{}, 400},
+		"403 Forbidden":   {WithFakeAuth, datadog.Dashboard{}, 403},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			_, httpresp, err := TESTAPICLIENT.DashboardsApi.CreateDashboard(tc.Ctx).Body(tc.Body).Execute()
-			assert.Equal(t, tc.ExpectedStatusCode, httpresp.StatusCode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, finish := WithRecorder(tc.Ctx(ctx), t)
+			defer finish()
+			assert := tests.Assert(ctx, t)
+
+			_, httpresp, err := Client(ctx).DashboardsApi.CreateDashboard(ctx).Body(tc.Body).Execute()
+			assert.Equal(tc.ExpectedStatusCode, httpresp.StatusCode)
 			apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.APIErrorResponse)
-			assert.True(t, ok)
-			assert.NotEmpty(t, apiError.GetErrors())
+			assert.True(ok)
+			assert.NotEmpty(apiError.GetErrors())
 		})
 	}
 }
 
 func TestDashboardListErrors(t *testing.T) {
-	// Setup the Client we'll use to interact with the Test account
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, close := tests.WithTestSpan(context.Background(), t)
+	defer close()
 
-	testCases := []struct {
-		Name               string
-		Ctx                context.Context
+	testCases := map[string]struct {
+		Ctx                func(context.Context) context.Context
 		ExpectedStatusCode int
 	}{
-		{"403 Forbidden", context.Background(), 403},
+		"403 Forbidden": {WithFakeAuth, 403},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			_, httpresp, err := TESTAPICLIENT.DashboardsApi.ListDashboards(tc.Ctx).Execute()
-			assert.Equal(t, tc.ExpectedStatusCode, httpresp.StatusCode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, finish := WithRecorder(tc.Ctx(ctx), t)
+			defer finish()
+			assert := tests.Assert(ctx, t)
+
+			_, httpresp, err := Client(ctx).DashboardsApi.ListDashboards(ctx).Execute()
+			assert.Equal(tc.ExpectedStatusCode, httpresp.StatusCode)
 			apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.APIErrorResponse)
-			assert.True(t, ok)
-			assert.NotEmpty(t, apiError.GetErrors())
+			assert.True(ok)
+			assert.NotEmpty(apiError.GetErrors())
 		})
 	}
 }
 
 func TestDashboardDeleteErrors(t *testing.T) {
-	// Setup the Client we'll use to interact with the Test account
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, close := tests.WithTestSpan(context.Background(), t)
+	defer close()
 
-	testCases := []struct {
-		Name               string
-		Ctx                context.Context
+	testCases := map[string]struct {
+		Ctx                func(context.Context) context.Context
 		ExpectedStatusCode int
 	}{
-		{"403 Forbidden", context.Background(), 403},
-		{"404 Not Found", TESTAUTH, 404},
+		"403 Forbidden": {WithFakeAuth, 403},
+		"404 Not Found": {WithTestAuth, 404},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			_, httpresp, err := TESTAPICLIENT.DashboardsApi.DeleteDashboard(tc.Ctx, "random").Execute()
-			assert.Equal(t, tc.ExpectedStatusCode, httpresp.StatusCode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, finish := WithRecorder(tc.Ctx(ctx), t)
+			defer finish()
+			assert := tests.Assert(ctx, t)
+
+			_, httpresp, err := Client(ctx).DashboardsApi.DeleteDashboard(ctx, "random").Execute()
+			assert.Equal(tc.ExpectedStatusCode, httpresp.StatusCode)
 			apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.APIErrorResponse)
-			assert.True(t, ok)
-			assert.NotEmpty(t, apiError.GetErrors())
+			assert.True(ok)
+			assert.NotEmpty(apiError.GetErrors())
 		})
 	}
 }
 
 func TestDashboardUpdateErrors(t *testing.T) {
-	// Setup the Client we'll use to interact with the Test account
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, close := tests.WithTestSpan(context.Background(), t)
+	defer close()
 
 	dashboardOK := *datadog.NewDashboardWithDefaults()
 	dashboardOK.SetWidgets([]datadog.Widget{})
 	dashboardOK.SetLayoutType(datadog.DASHBOARDLAYOUTTYPE_FREE)
 
-	testCases := []struct {
-		Name               string
-		Ctx                context.Context
+	testCases := map[string]struct {
+		Ctx                func(context.Context) context.Context
 		Body               datadog.Dashboard
 		ExpectedStatusCode int
 	}{
-		{"400 Bad Request", TESTAUTH, datadog.Dashboard{}, 400},
-		{"403 Forbidden", context.Background(), datadog.Dashboard{}, 403},
-		{"404 Not Found", TESTAUTH, dashboardOK, 404},
+		"400 Bad Request": {WithTestAuth, datadog.Dashboard{}, 400},
+		"403 Forbidden":   {WithFakeAuth, datadog.Dashboard{}, 403},
+		"404 Not Found":   {WithTestAuth, dashboardOK, 404},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			_, httpresp, err := TESTAPICLIENT.DashboardsApi.UpdateDashboard(tc.Ctx, "random").Body(tc.Body).Execute()
-			assert.Equal(t, tc.ExpectedStatusCode, httpresp.StatusCode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, finish := WithRecorder(tc.Ctx(ctx), t)
+			defer finish()
+			assert := tests.Assert(ctx, t)
+
+			_, httpresp, err := Client(ctx).DashboardsApi.UpdateDashboard(ctx, "random").Body(tc.Body).Execute()
+			assert.Equal(tc.ExpectedStatusCode, httpresp.StatusCode)
 			apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.APIErrorResponse)
-			assert.True(t, ok)
-			assert.NotEmpty(t, apiError.GetErrors())
+			assert.True(ok)
+			assert.NotEmpty(apiError.GetErrors())
 		})
 	}
 }
 
 func TestDashboardGetErrors(t *testing.T) {
-	// Setup the Client we'll use to interact with the Test account
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, close := tests.WithTestSpan(context.Background(), t)
+	defer close()
 
-	testCases := []struct {
-		Name               string
-		Ctx                context.Context
+	testCases := map[string]struct {
+		Ctx                func(context.Context) context.Context
 		ExpectedStatusCode int
 	}{
-		{"403 Forbidden", context.Background(), 403},
-		{"404 Not Found", TESTAUTH, 404},
+		"403 Forbidden": {WithFakeAuth, 403},
+		"404 Not Found": {WithTestAuth, 404},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			_, httpresp, err := TESTAPICLIENT.DashboardsApi.GetDashboard(tc.Ctx, "random").Execute()
-			assert.Equal(t, tc.ExpectedStatusCode, httpresp.StatusCode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, finish := WithRecorder(tc.Ctx(ctx), t)
+			defer finish()
+			assert := tests.Assert(ctx, t)
+
+			_, httpresp, err := Client(ctx).DashboardsApi.GetDashboard(ctx, "random").Execute()
+			assert.Equal(tc.ExpectedStatusCode, httpresp.StatusCode)
 			apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.APIErrorResponse)
-			assert.True(t, ok)
-			assert.NotEmpty(t, apiError.GetErrors())
+			assert.True(ok)
+			assert.NotEmpty(apiError.GetErrors())
 		})
 	}
 }
 
-func deleteDashboard(dashboardID string) {
-	_, httpresp, err := TESTAPICLIENT.DashboardsApi.DeleteDashboard(TESTAUTH, dashboardID).Execute()
+func deleteDashboard(ctx context.Context, dashboardID string) {
+	_, httpresp, err := Client(ctx).DashboardsApi.DeleteDashboard(ctx, dashboardID).Execute()
 	if err != nil && httpresp.StatusCode != 404 {
 		log.Printf("Error deleting Dashboard: %v, Another test may have already deleted this dashboard.", dashboardID)
 	}

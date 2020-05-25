@@ -12,15 +12,15 @@ import (
 	"encoding/json"
 )
 
-// WidgetMarker Markers allow you to add visual conditional formatting for your graphs
+// WidgetMarker Markers allow you to add visual conditional formatting for your graphs.
 type WidgetMarker struct {
 	// Combination of:   - A severity error, warning, ok, or info   - A line type: dashed, solid, or bold
 	DisplayType *string `json:"display_type,omitempty"`
 	// Label to display over the marker.
 	Label *string `json:"label,omitempty"`
-	// TODO.
+	// Timestamp for the widget.
 	Time *string `json:"time,omitempty"`
-	// Value to apply. Can be a single value y = 15 or a range of values 0 < y < 10
+	// Value to apply. Can be a single value y = 15 or a range of values 0 < y < 10.
 	Value string `json:"value"`
 }
 

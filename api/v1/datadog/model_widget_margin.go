@@ -12,7 +12,11 @@ import (
 	"encoding/json"
 )
 
-// WidgetMargin Size of the margins around the image. Available values are small or large
+import (
+	"fmt"
+)
+
+// WidgetMargin Size of the margins around the image.
 type WidgetMargin string
 
 // List of WidgetMargin
@@ -20,6 +24,23 @@ const (
 	WIDGETMARGIN_SMALL WidgetMargin = "small"
 	WIDGETMARGIN_LARGE WidgetMargin = "large"
 )
+
+func (v *WidgetMargin) UnmarshalJSON(src []byte) error {
+	var value string
+	err := json.Unmarshal(src, &value)
+	if err != nil {
+		return err
+	}
+	enumTypeValue := WidgetMargin(value)
+	for _, existing := range []WidgetMargin{"small", "large"} {
+		if existing == enumTypeValue {
+			*v = enumTypeValue
+			return nil
+		}
+	}
+
+	return fmt.Errorf("%+v is not a valid WidgetMargin", *v)
+}
 
 // Ptr returns reference to WidgetMargin value
 func (v WidgetMargin) Ptr() *WidgetMargin {

@@ -12,7 +12,11 @@ import (
 	"encoding/json"
 )
 
-// SyntheticsTestDetailsSubType TODO.
+import (
+	"fmt"
+)
+
+// SyntheticsTestDetailsSubType The sub-type of the Synthetic API test, either `http` or `ssl`.
 type SyntheticsTestDetailsSubType string
 
 // List of SyntheticsTestDetailsSubType
@@ -20,6 +24,23 @@ const (
 	SYNTHETICSTESTDETAILSSUBTYPE_HTTP SyntheticsTestDetailsSubType = "http"
 	SYNTHETICSTESTDETAILSSUBTYPE_SSL  SyntheticsTestDetailsSubType = "ssl"
 )
+
+func (v *SyntheticsTestDetailsSubType) UnmarshalJSON(src []byte) error {
+	var value string
+	err := json.Unmarshal(src, &value)
+	if err != nil {
+		return err
+	}
+	enumTypeValue := SyntheticsTestDetailsSubType(value)
+	for _, existing := range []SyntheticsTestDetailsSubType{"http", "ssl"} {
+		if existing == enumTypeValue {
+			*v = enumTypeValue
+			return nil
+		}
+	}
+
+	return fmt.Errorf("%+v is not a valid SyntheticsTestDetailsSubType", *v)
+}
 
 // Ptr returns reference to SyntheticsTestDetailsSubType value
 func (v SyntheticsTestDetailsSubType) Ptr() *SyntheticsTestDetailsSubType {

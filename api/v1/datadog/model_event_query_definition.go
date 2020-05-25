@@ -12,11 +12,11 @@ import (
 	"encoding/json"
 )
 
-// EventQueryDefinition TODO.
+// EventQueryDefinition List of events
 type EventQueryDefinition struct {
-	// TODO.
+	// The query being made on the event.
 	Search string `json:"search"`
-	// The execution method for multi-value filters. Can be either and or or
+	// The execution method for multi-value filters. Can be either and or or.
 	TagsExecution string `json:"tags_execution"`
 }
 

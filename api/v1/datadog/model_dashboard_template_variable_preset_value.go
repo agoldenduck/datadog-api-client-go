@@ -12,11 +12,11 @@ import (
 	"encoding/json"
 )
 
-// DashboardTemplateVariablePresetValue TODO.
+// DashboardTemplateVariablePresetValue Template variables saved views.
 type DashboardTemplateVariablePresetValue struct {
-	// The name of the variable
+	// The name of the variable.
 	Name *string `json:"name,omitempty"`
-	// The value of the template variable within the saved view
+	// The value of the template variable within the saved view.
 	Value *string `json:"value,omitempty"`
 }
 

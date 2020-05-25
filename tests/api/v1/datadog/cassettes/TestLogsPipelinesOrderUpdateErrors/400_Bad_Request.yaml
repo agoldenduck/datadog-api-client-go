@@ -1,0 +1,62 @@
+---
+version: 1
+interactions:
+- request:
+    body: |
+      {"pipeline_ids":null}
+    form: {}
+    headers:
+      Accept:
+      - application/json
+      Content-Type:
+      - application/json
+      Dd-Operation-Id:
+      - UpdateLogsPipelineOrder
+      User-Agent:
+      - datadog-api-client-go/1.0.0-beta.2 (go go1.14; os darwin; arch amd64)
+      X-Datadog-Parent-Id:
+      - "7194670063383291789"
+      X-Datadog-Sampling-Priority:
+      - "1"
+      X-Datadog-Trace-Id:
+      - "3025319915432624904"
+    url: https://api.datadoghq.com/api/v1/logs/config/pipeline-order
+    method: PUT
+  response:
+    body: '{"error":{"code":"InvalidArgument","message":"missing field: pipeline_ids"}}'
+    headers:
+      Cache-Control:
+      - no-cache
+      Connection:
+      - keep-alive
+      Content-Length:
+      - "76"
+      Content-Security-Policy:
+      - frame-ancestors 'self'; report-uri https://api.datadoghq.com/csp-report
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 12 May 2020 13:31:48 GMT
+      Dd-Pool:
+      - dogweb
+      Pragma:
+      - no-cache
+      Strict-Transport-Security:
+      - max-age=15724800;
+      X-Content-Type-Options:
+      - nosniff
+      X-Dd-Version:
+      - "35.2493025"
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Ratelimit-Limit:
+      - "100"
+      X-Ratelimit-Period:
+      - "3600"
+      X-Ratelimit-Remaining:
+      - "80"
+      X-Ratelimit-Reset:
+      - "1692"
+    status: 400 Bad Request
+    code: 400
+    duration: ""

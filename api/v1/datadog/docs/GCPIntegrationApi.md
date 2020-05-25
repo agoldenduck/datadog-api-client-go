@@ -19,6 +19,46 @@ Create a GCP integration
 
 
 
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    datadog "github.com/DataDog/datadog-api-client-go/api/v1/datadog"
+)
+
+func main() {
+    ctx := context.WithValue(
+        context.Background(),
+        datadog.ContextAPIKeys,
+        map[string]datadog.APIKey{
+            "apiKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_API_KEY"),
+            },
+            "appKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_APP_KEY"),
+            },
+        },
+    )
+
+    body := datadog.GCPAccount{AuthProviderX509CertUrl: "AuthProviderX509CertUrl_example", AuthUri: "AuthUri_example", Automute: false, ClientEmail: "ClientEmail_example", ClientId: "ClientId_example", ClientX509CertUrl: "ClientX509CertUrl_example", Errors: []string{"Errors_example"), HostFilters: "HostFilters_example", PrivateKey: "PrivateKey_example", PrivateKeyId: "PrivateKeyId_example", ProjectId: "ProjectId_example", TokenUri: "TokenUri_example", Type: "Type_example"} // GCPAccount | Create a Datadog-Azure integration.
+
+    configuration := datadog.NewConfiguration()
+    api_client := datadog.NewAPIClient(configuration)
+    resp, r, err := api_client.GCPIntegrationApi.CreateGCPIntegration(ctx, body).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `GCPIntegrationApi.CreateGCPIntegration``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `CreateGCPIntegration`: interface{}
+    fmt.Fprintf(os.Stdout, "Response from `GCPIntegrationApi.CreateGCPIntegration`: %v\n", resp)
+}
+```
+
 ### Path Parameters
 
 
@@ -57,6 +97,46 @@ Name | Type | Description  | Notes
 Delete a GCP integration
 
 
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    datadog "github.com/DataDog/datadog-api-client-go/api/v1/datadog"
+)
+
+func main() {
+    ctx := context.WithValue(
+        context.Background(),
+        datadog.ContextAPIKeys,
+        map[string]datadog.APIKey{
+            "apiKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_API_KEY"),
+            },
+            "appKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_APP_KEY"),
+            },
+        },
+    )
+
+    body := datadog.GCPAccount{AuthProviderX509CertUrl: "AuthProviderX509CertUrl_example", AuthUri: "AuthUri_example", Automute: false, ClientEmail: "ClientEmail_example", ClientId: "ClientId_example", ClientX509CertUrl: "ClientX509CertUrl_example", Errors: []string{"Errors_example"), HostFilters: "HostFilters_example", PrivateKey: "PrivateKey_example", PrivateKeyId: "PrivateKeyId_example", ProjectId: "ProjectId_example", TokenUri: "TokenUri_example", Type: "Type_example"} // GCPAccount | Delete a given Datadog-GCP integration.
+
+    configuration := datadog.NewConfiguration()
+    api_client := datadog.NewAPIClient(configuration)
+    resp, r, err := api_client.GCPIntegrationApi.DeleteGCPIntegration(ctx, body).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `GCPIntegrationApi.DeleteGCPIntegration``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `DeleteGCPIntegration`: interface{}
+    fmt.Fprintf(os.Stdout, "Response from `GCPIntegrationApi.DeleteGCPIntegration`: %v\n", resp)
+}
+```
 
 ### Path Parameters
 
@@ -97,6 +177,45 @@ List all GCP integrations
 
 
 
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    datadog "github.com/DataDog/datadog-api-client-go/api/v1/datadog"
+)
+
+func main() {
+    ctx := context.WithValue(
+        context.Background(),
+        datadog.ContextAPIKeys,
+        map[string]datadog.APIKey{
+            "apiKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_API_KEY"),
+            },
+            "appKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_APP_KEY"),
+            },
+        },
+    )
+
+
+    configuration := datadog.NewConfiguration()
+    api_client := datadog.NewAPIClient(configuration)
+    resp, r, err := api_client.GCPIntegrationApi.ListGCPIntegration(ctx).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `GCPIntegrationApi.ListGCPIntegration``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `ListGCPIntegration`: []GCPAccount
+    fmt.Fprintf(os.Stdout, "Response from `GCPIntegrationApi.ListGCPIntegration`: %v\n", resp)
+}
+```
+
 ### Path Parameters
 
 This endpoint does not need any parameter.
@@ -131,6 +250,46 @@ Other parameters are passed through a pointer to a apiListGCPIntegrationRequest 
 Update a GCP integration
 
 
+
+### Example
+
+```go
+package main
+
+import (
+    "context"
+    "fmt"
+    "os"
+    datadog "github.com/DataDog/datadog-api-client-go/api/v1/datadog"
+)
+
+func main() {
+    ctx := context.WithValue(
+        context.Background(),
+        datadog.ContextAPIKeys,
+        map[string]datadog.APIKey{
+            "apiKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_API_KEY"),
+            },
+            "appKeyAuth": {
+                Key: os.Getenv("DD_CLIENT_APP_KEY"),
+            },
+        },
+    )
+
+    body :=  // GCPAccount | Update a Datadog-GCP integration.
+
+    configuration := datadog.NewConfiguration()
+    api_client := datadog.NewAPIClient(configuration)
+    resp, r, err := api_client.GCPIntegrationApi.UpdateGCPIntegration(ctx, body).Execute()
+    if err != nil {
+        fmt.Fprintf(os.Stderr, "Error when calling `GCPIntegrationApi.UpdateGCPIntegration``: %v\n", err)
+        fmt.Fprintf(os.Stderr, "Full HTTP response: %v\n", r)
+    }
+    // response from `UpdateGCPIntegration`: interface{}
+    fmt.Fprintf(os.Stdout, "Response from `GCPIntegrationApi.UpdateGCPIntegration`: %v\n", resp)
+}
+```
 
 ### Path Parameters
 

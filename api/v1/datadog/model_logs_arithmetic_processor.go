@@ -16,32 +16,30 @@ import (
 type LogsArithmeticProcessor struct {
 	// Arithmetic operation between one or more log attributes.
 	Expression string `json:"expression"`
-	// If `true`, it replaces all missing attributes of expression by `0`, `false` skip the operation if an attribute is missing.
-	IsReplaceMissing *bool `json:"is_replace_missing,omitempty"`
-	// Name of the attribute that contains the result of the arithmetic operation.
-	Target string `json:"target"`
-	// Type of processor
-	Type *string `json:"type,omitempty"`
 	// Whether or not the processor is enabled.
 	IsEnabled *bool `json:"is_enabled,omitempty"`
+	// If `true`, it replaces all missing attributes of expression by `0`, `false` skip the operation if an attribute is missing.
+	IsReplaceMissing *bool `json:"is_replace_missing,omitempty"`
 	// Name of the processor.
 	Name *string `json:"name,omitempty"`
+	// Name of the attribute that contains the result of the arithmetic operation.
+	Target string                      `json:"target"`
+	Type   LogsArithmeticProcessorType `json:"type"`
 }
 
 // NewLogsArithmeticProcessor instantiates a new LogsArithmeticProcessor object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewLogsArithmeticProcessor(expression string, target string) *LogsArithmeticProcessor {
+func NewLogsArithmeticProcessor(expression string, target string, type_ LogsArithmeticProcessorType) *LogsArithmeticProcessor {
 	this := LogsArithmeticProcessor{}
 	this.Expression = expression
+	var isEnabled bool = false
+	this.IsEnabled = &isEnabled
 	var isReplaceMissing bool = false
 	this.IsReplaceMissing = &isReplaceMissing
 	this.Target = target
-	var type_ string = "arithmetic-processor"
-	this.Type = &type_
-	var isEnabled bool = false
-	this.IsEnabled = &isEnabled
+	this.Type = type_
 	return &this
 }
 
@@ -50,12 +48,12 @@ func NewLogsArithmeticProcessor(expression string, target string) *LogsArithmeti
 // but it doesn't guarantee that properties required by API are set
 func NewLogsArithmeticProcessorWithDefaults() *LogsArithmeticProcessor {
 	this := LogsArithmeticProcessor{}
-	var isReplaceMissing bool = false
-	this.IsReplaceMissing = &isReplaceMissing
-	var type_ string = "arithmetic-processor"
-	this.Type = &type_
 	var isEnabled bool = false
 	this.IsEnabled = &isEnabled
+	var isReplaceMissing bool = false
+	this.IsReplaceMissing = &isReplaceMissing
+	var type_ LogsArithmeticProcessorType = "arithmetic-processor"
+	this.Type = type_
 	return &this
 }
 
@@ -81,94 +79,6 @@ func (o *LogsArithmeticProcessor) GetExpressionOk() (*string, bool) {
 // SetExpression sets field value
 func (o *LogsArithmeticProcessor) SetExpression(v string) {
 	o.Expression = v
-}
-
-// GetIsReplaceMissing returns the IsReplaceMissing field value if set, zero value otherwise.
-func (o *LogsArithmeticProcessor) GetIsReplaceMissing() bool {
-	if o == nil || o.IsReplaceMissing == nil {
-		var ret bool
-		return ret
-	}
-	return *o.IsReplaceMissing
-}
-
-// GetIsReplaceMissingOk returns a tuple with the IsReplaceMissing field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *LogsArithmeticProcessor) GetIsReplaceMissingOk() (*bool, bool) {
-	if o == nil || o.IsReplaceMissing == nil {
-		return nil, false
-	}
-	return o.IsReplaceMissing, true
-}
-
-// HasIsReplaceMissing returns a boolean if a field has been set.
-func (o *LogsArithmeticProcessor) HasIsReplaceMissing() bool {
-	if o != nil && o.IsReplaceMissing != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetIsReplaceMissing gets a reference to the given bool and assigns it to the IsReplaceMissing field.
-func (o *LogsArithmeticProcessor) SetIsReplaceMissing(v bool) {
-	o.IsReplaceMissing = &v
-}
-
-// GetTarget returns the Target field value
-func (o *LogsArithmeticProcessor) GetTarget() string {
-	if o == nil {
-		var ret string
-		return ret
-	}
-
-	return o.Target
-}
-
-// GetTargetOk returns a tuple with the Target field value
-// and a boolean to check if the value has been set.
-func (o *LogsArithmeticProcessor) GetTargetOk() (*string, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Target, true
-}
-
-// SetTarget sets field value
-func (o *LogsArithmeticProcessor) SetTarget(v string) {
-	o.Target = v
-}
-
-// GetType returns the Type field value if set, zero value otherwise.
-func (o *LogsArithmeticProcessor) GetType() string {
-	if o == nil || o.Type == nil {
-		var ret string
-		return ret
-	}
-	return *o.Type
-}
-
-// GetTypeOk returns a tuple with the Type field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *LogsArithmeticProcessor) GetTypeOk() (*string, bool) {
-	if o == nil || o.Type == nil {
-		return nil, false
-	}
-	return o.Type, true
-}
-
-// HasType returns a boolean if a field has been set.
-func (o *LogsArithmeticProcessor) HasType() bool {
-	if o != nil && o.Type != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetType gets a reference to the given string and assigns it to the Type field.
-func (o *LogsArithmeticProcessor) SetType(v string) {
-	o.Type = &v
 }
 
 // GetIsEnabled returns the IsEnabled field value if set, zero value otherwise.
@@ -203,6 +113,38 @@ func (o *LogsArithmeticProcessor) SetIsEnabled(v bool) {
 	o.IsEnabled = &v
 }
 
+// GetIsReplaceMissing returns the IsReplaceMissing field value if set, zero value otherwise.
+func (o *LogsArithmeticProcessor) GetIsReplaceMissing() bool {
+	if o == nil || o.IsReplaceMissing == nil {
+		var ret bool
+		return ret
+	}
+	return *o.IsReplaceMissing
+}
+
+// GetIsReplaceMissingOk returns a tuple with the IsReplaceMissing field value if set, nil otherwise
+// and a boolean to check if the value has been set.
+func (o *LogsArithmeticProcessor) GetIsReplaceMissingOk() (*bool, bool) {
+	if o == nil || o.IsReplaceMissing == nil {
+		return nil, false
+	}
+	return o.IsReplaceMissing, true
+}
+
+// HasIsReplaceMissing returns a boolean if a field has been set.
+func (o *LogsArithmeticProcessor) HasIsReplaceMissing() bool {
+	if o != nil && o.IsReplaceMissing != nil {
+		return true
+	}
+
+	return false
+}
+
+// SetIsReplaceMissing gets a reference to the given bool and assigns it to the IsReplaceMissing field.
+func (o *LogsArithmeticProcessor) SetIsReplaceMissing(v bool) {
+	o.IsReplaceMissing = &v
+}
+
 // GetName returns the Name field value if set, zero value otherwise.
 func (o *LogsArithmeticProcessor) GetName() string {
 	if o == nil || o.Name == nil {
@@ -235,32 +177,75 @@ func (o *LogsArithmeticProcessor) SetName(v string) {
 	o.Name = &v
 }
 
+// GetTarget returns the Target field value
+func (o *LogsArithmeticProcessor) GetTarget() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Target
+}
+
+// GetTargetOk returns a tuple with the Target field value
+// and a boolean to check if the value has been set.
+func (o *LogsArithmeticProcessor) GetTargetOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Target, true
+}
+
+// SetTarget sets field value
+func (o *LogsArithmeticProcessor) SetTarget(v string) {
+	o.Target = v
+}
+
+// GetType returns the Type field value
+func (o *LogsArithmeticProcessor) GetType() LogsArithmeticProcessorType {
+	if o == nil {
+		var ret LogsArithmeticProcessorType
+		return ret
+	}
+
+	return o.Type
+}
+
+// GetTypeOk returns a tuple with the Type field value
+// and a boolean to check if the value has been set.
+func (o *LogsArithmeticProcessor) GetTypeOk() (*LogsArithmeticProcessorType, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Type, true
+}
+
+// SetType sets field value
+func (o *LogsArithmeticProcessor) SetType(v LogsArithmeticProcessorType) {
+	o.Type = v
+}
+
 func (o LogsArithmeticProcessor) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
 	if true {
 		toSerialize["expression"] = o.Expression
 	}
-	if o.IsReplaceMissing != nil {
-		toSerialize["is_replace_missing"] = o.IsReplaceMissing
-	}
-	if true {
-		toSerialize["target"] = o.Target
-	}
-	if o.Type != nil {
-		toSerialize["type"] = o.Type
-	}
 	if o.IsEnabled != nil {
 		toSerialize["is_enabled"] = o.IsEnabled
+	}
+	if o.IsReplaceMissing != nil {
+		toSerialize["is_replace_missing"] = o.IsReplaceMissing
 	}
 	if o.Name != nil {
 		toSerialize["name"] = o.Name
 	}
+	if true {
+		toSerialize["target"] = o.Target
+	}
+	if true {
+		toSerialize["type"] = o.Type
+	}
 	return json.Marshal(toSerialize)
-}
-
-// AsLogsProcessor wraps this instance of LogsArithmeticProcessor in LogsProcessor
-func (s *LogsArithmeticProcessor) AsLogsProcessor() LogsProcessor {
-	return LogsProcessor{LogsProcessorInterface: s}
 }
 
 type NullableLogsArithmeticProcessor struct {

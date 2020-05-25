@@ -8,29 +8,29 @@ import (
 
 	"github.com/DataDog/datadog-api-client-go/api/v1/datadog"
 	"github.com/DataDog/datadog-api-client-go/tests"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestLogsList(t *testing.T) {
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, finish := WithRecorder(WithTestAuth(context.Background()), t)
+	defer finish()
+	assert := tests.Assert(ctx, t)
 
-	now := TESTCLOCK.Now()
+	now := tests.ClockFromContext(ctx).Now()
 	nanoNow := now.UnixNano()
 	source := fmt.Sprintf("go-client-test-%d", nanoNow)
 	message := fmt.Sprintf("test-log-list-%d", nanoNow)
-	hostname := fmt.Sprintf("datadog-api-client-go-test-%d", nanoNow)
+	hostname := *tests.UniqueEntityName(ctx, t)
 
 	// Create log entry
 	httpLog := fmt.Sprintf(
 		`{"ddsource": "%s", "ddtags": "go,test,list", "hostname": "%s", "message": "{\"timestamp\": %d, \"message\": \"%s\"}"}`,
 		source, hostname, (now.Unix()-1)*1000, message,
 	)
-	httpresp, respBody, err := sendRequest("POST", "https://http-intake.logs.datadoghq.com/v1/input", []byte(httpLog))
+	httpresp, respBody, err := SendRequest(ctx, "POST", "https://http-intake.logs.datadoghq.com/v1/input", []byte(httpLog))
 	if err != nil {
 		t.Fatalf("Error creating log: Response %s: %v", respBody, err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
+	assert.Equal(200, httpresp.StatusCode)
 	time.Sleep(time.Duration(500) * time.Microsecond)
 
 	secondMessage := fmt.Sprintf("second-test-log-list-%d", nanoNow)
@@ -40,11 +40,11 @@ func TestLogsList(t *testing.T) {
 	)
 
 	// Create second log entry
-	httpresp, respBody, err = sendRequest("POST", "https://http-intake.logs.datadoghq.com/v1/input", []byte(httpLog))
+	httpresp, respBody, err = SendRequest(ctx, "POST", "https://http-intake.logs.datadoghq.com/v1/input", []byte(httpLog))
 	if err != nil {
 		t.Fatalf("Error creating log: Response %s: %v", respBody, err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
+	assert.Equal(200, httpresp.StatusCode)
 
 	logsRequest := datadog.LogsListRequest{
 		Query: fmt.Sprintf("source:%s", source),
@@ -60,7 +60,7 @@ func TestLogsList(t *testing.T) {
 
 	// Make sure that both log items are indexed
 	err = tests.Retry(time.Duration(5)*time.Second, 30, func() bool {
-		logsResponse, httpresp, err = TESTAPICLIENT.LogsApi.ListLogs(TESTAUTH).Body(logsRequest).Execute()
+		logsResponse, httpresp, err = Client(ctx).LogsApi.ListLogs(ctx).Body(logsRequest).Execute()
 		if err != nil {
 			t.Fatalf("Error listing logs: Response %s: %v", err.(datadog.GenericOpenAPIError).Body(), err)
 		}
@@ -73,64 +73,66 @@ func TestLogsList(t *testing.T) {
 	// Find first log item
 	logsRequest.SetLimit(1)
 
-	logsResponse, httpresp, err = TESTAPICLIENT.LogsApi.ListLogs(TESTAUTH).Body(logsRequest).Execute()
+	logsResponse, httpresp, err = Client(ctx).LogsApi.ListLogs(ctx).Body(logsRequest).Execute()
 	if err != nil {
 		t.Fatalf("Error listing logs: Response %s: %v", err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
+	assert.Equal(200, httpresp.StatusCode)
 
 	for _, log := range logsResponse.GetLogs() {
 		content := log.GetContent()
-		assert.Equal(t, hostname, content.GetHost())
-		assert.Equal(t, message, content.GetMessage())
+		assert.Equal(hostname, content.GetHost())
+		assert.Equal(message, content.GetMessage())
 	}
 
 	// Find second log item
-	assert.True(t, len(*logsResponse.NextLogId) > 0)
+	assert.True(len(*logsResponse.NextLogId) > 0)
 	logsRequest.SetStartAt(logsResponse.GetNextLogId())
 
-	logsResponse, httpresp, err = TESTAPICLIENT.LogsApi.ListLogs(TESTAUTH).Body(logsRequest).Execute()
+	logsResponse, httpresp, err = Client(ctx).LogsApi.ListLogs(ctx).Body(logsRequest).Execute()
 	if err != nil {
 		t.Fatalf("Error listing logs: Response %s: %v", err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
+	assert.Equal(200, httpresp.StatusCode)
 
 	for _, log := range logsResponse.GetLogs() {
 		content := log.GetContent()
-		assert.Equal(t, hostname, content.GetHost())
-		assert.Equal(t, secondMessage, content.GetMessage())
+		assert.Equal(hostname, content.GetHost())
+		assert.Equal(secondMessage, content.GetMessage())
 	}
 }
 
 func TestLogsListErrors(t *testing.T) {
-	// Setup the Client we'll use to interact with the Test account
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, close := tests.WithTestSpan(context.Background(), t)
+	defer close()
 
 	req := *datadog.NewLogsListRequestWithDefaults()
 	req.SetStartAt("notanid")
-	testCases := []struct {
-		Name               string
-		Ctx                context.Context
+	testCases := map[string]struct {
+		Ctx                func(context.Context) context.Context
 		Body               datadog.LogsListRequest
 		ExpectedStatusCode int
 	}{
-		{"400 Bad Request", TESTAUTH, req, 400},
-		{"403 Forbidden", fake_auth, req, 403},
+		"400 Bad Request": {WithTestAuth, req, 400},
+		"403 Forbidden":   {WithFakeAuth, req, 403},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			_, httpresp, err := TESTAPICLIENT.LogsApi.ListLogs(tc.Ctx).Body(tc.Body).Execute()
-			assert.Equal(t, tc.ExpectedStatusCode, httpresp.StatusCode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, finish := WithRecorder(tc.Ctx(ctx), t)
+			defer finish()
+			assert := tests.Assert(ctx, t)
+
+			_, httpresp, err := Client(ctx).LogsApi.ListLogs(ctx).Body(tc.Body).Execute()
+			assert.Equal(tc.ExpectedStatusCode, httpresp.StatusCode)
 			if tc.ExpectedStatusCode == 403 {
 				apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.APIErrorResponse)
-				assert.True(t, ok)
-				assert.NotEmpty(t, apiError.GetErrors())
+				assert.True(ok)
+				assert.NotEmpty(apiError.GetErrors())
 			} else {
 				apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.LogsAPIErrorResponse)
-				assert.True(t, ok)
-				assert.NotEmpty(t, apiError.GetError())
+				assert.True(ok)
+				assert.NotEmpty(apiError.GetError())
 			}
 		})
 	}

@@ -8,66 +8,35 @@ package test
 
 import (
 	"context"
-	"fmt"
-	"io/ioutil"
 	"log"
 	"net/http"
-	"net/url"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/DataDog/datadog-api-client-go/api/v2/datadog"
-	"github.com/dnaeon/go-vcr/cassette"
-	"github.com/dnaeon/go-vcr/recorder"
-	"github.com/jonboulle/clockwork"
+	"github.com/DataDog/datadog-api-client-go/tests"
 )
 
-// TestAPIClient is the api client to use for tests
-var TestAPIClient *datadog.APIClient
-
-// TestAuth is the authentication context to use with each test API call
-var TestAuth context.Context
-
-// TestClock is the time module to use in tests
-var TestClock clockwork.FakeClock
-
-func setClock(t *testing.T) {
-	os.MkdirAll("cassettes", 0755)
-	f, err := os.Create(fmt.Sprintf("cassettes/%s.freeze", t.Name()))
-	if err != nil {
-		t.Fatalf("Could not set clock: %v", err)
-	}
-	defer f.Close()
-	now := clockwork.NewRealClock().Now()
-	f.WriteString(now.Format(time.RFC3339Nano))
-	TestClock = clockwork.NewFakeClockAt(now)
+// WithFakeAuth avoids issue of API returning `text/html` instead of `application/json`
+func WithFakeAuth(ctx context.Context) context.Context {
+	return context.WithValue(
+		ctx,
+		datadog.ContextAPIKeys,
+		map[string]datadog.APIKey{
+			"apiKeyAuth": {
+				Key: "FAKE_KEY",
+			},
+			"appKeyAuth": {
+				Key: "FAKE_KEY",
+			},
+		},
+	)
 }
 
-func restoreClock(t *testing.T) {
-	data, err := ioutil.ReadFile(fmt.Sprintf("cassettes/%s.freeze", t.Name()))
-	if err != nil {
-		t.Fatalf("Could not load clock: %v", err)
-	}
-	now, err := time.Parse(time.RFC3339Nano, string(data))
-	if err != nil {
-		t.Fatalf("Could not parse clock date: %v", err)
-	}
-	TestClock = clockwork.NewFakeClockAt(now)
-}
-
-func removeURLSecrets(u *url.URL) *url.URL {
-	query := u.Query()
-	query.Del("api_key")
-	query.Del("application_key")
-	u.RawQuery = query.Encode()
-	return u
-}
-
-func setupTest(t *testing.T) func(t *testing.T) {
-	// SETUP testing
-	TestAuth = context.WithValue(
-		context.Background(),
+// WithTestAuth returns authenticated context.
+func WithTestAuth(ctx context.Context) context.Context {
+	return context.WithValue(
+		ctx,
 		datadog.ContextAPIKeys,
 		map[string]datadog.APIKey{
 			"apiKeyAuth": {
@@ -78,71 +47,85 @@ func setupTest(t *testing.T) func(t *testing.T) {
 			},
 		},
 	)
+}
+
+// NewConfiguration return configuration with known options.
+func NewConfiguration() *datadog.Configuration {
 	config := datadog.NewConfiguration()
 	config.Debug = os.Getenv("DEBUG") == "true"
 
-	// Configure recorder
-	var mode recorder.Mode
-	if os.Getenv("RECORD") == "true" {
-		mode = recorder.ModeRecording
-	} else {
-		mode = recorder.ModeReplaying
+	// Set test site as default
+	testSite, ok := os.LookupEnv("DD_TEST_SITE")
+	if ok {
+		server := config.Servers[0]
+		site := server.Variables["site"]
+		site.DefaultValue = testSite
+		site.EnumValues = append(site.EnumValues, testSite)
+		server.Variables["site"] = site
+		config.Servers[0] = server
+
+		for operationID, servers := range config.OperationServers {
+			server := servers[0]
+			site := server.Variables["site"]
+			site.DefaultValue = testSite
+			site.EnumValues = append(site.EnumValues, testSite)
+			server.Variables["site"] = site
+			servers[0] = server
+			config.OperationServers[operationID] = servers
+		}
 	}
-	r, err := recorder.NewAsMode(fmt.Sprintf("cassettes/%s", t.Name()), mode, nil)
+	return config
+}
+
+type contextKey string
+
+var (
+	clientKey = contextKey("client")
+)
+
+// WithClient sets client for unit tests in context.
+func WithClient(ctx context.Context, t *testing.T) (context.Context, func()) {
+	ctx, finish := tests.WithTestSpan(ctx, t)
+	ctx = context.WithValue(ctx, clientKey, datadog.NewAPIClient(NewConfiguration()))
+	return ctx, finish
+}
+
+// ClientFromContext returns client and indication if it was successful.
+func ClientFromContext(ctx context.Context) (*datadog.APIClient, bool) {
+	if ctx == nil {
+		return nil, false
+	}
+	v := ctx.Value(clientKey)
+	if c, ok := v.(*datadog.APIClient); ok {
+		return c, true
+	}
+	return nil, false
+}
+
+// Client returns client from context.
+func Client(ctx context.Context) *datadog.APIClient {
+	c, ok := ClientFromContext(ctx)
+	if !ok {
+		log.Fatal("client is not configured")
+	}
+	return c
+}
+
+// WithRecorder configures client with recorder.
+func WithRecorder(ctx context.Context, t *testing.T) (context.Context, func()) {
+	ctx, finish := WithClient(ctx, t)
+	client := Client(ctx)
+
+	ctx = tests.WithClock(ctx, t)
+
+	r, err := tests.Recorder(ctx, t)
 	if err != nil {
 		log.Fatal(err)
 	}
+	client.GetConfig().HTTPClient = &http.Client{Transport: tests.WrapRoundTripper(r)}
 
-	r.SetMatcher(func(r *http.Request, i cassette.Request) bool {
-		return r.Method == i.Method && removeURLSecrets(r.URL).String() == i.URL
-	})
-
-	r.AddFilter(func(i *cassette.Interaction) error {
-		u, err := url.Parse(i.URL)
-		if err != nil {
-			return err
-		}
-		i.URL = removeURLSecrets(u).String()
-		i.Request.Headers.Del("Dd-Api-Key")
-		i.Request.Headers.Del("Dd-Application-Key")
-		return nil
-	})
-
-	if os.Getenv("RECORD") == "true" {
-		setClock(t)
-	} else {
-		restoreClock(t)
-	}
-
-	config.HTTPClient = &http.Client{
-		Transport: r, // Inject as transport!
-	}
-
-	TestAPIClient = datadog.NewAPIClient(config)
-
-	return func(t *testing.T) {
+	return ctx, func() {
 		r.Stop()
-	}
-}
-
-func setupUnitTest(t *testing.T) func(t *testing.T) {
-	// SETUP testing
-	TestAuth = context.WithValue(
-		context.Background(),
-		datadog.ContextAPIKeys,
-		map[string]datadog.APIKey{
-			"apiKeyAuth": {
-				Key: "FAKE_KEY",
-			},
-			"appKeyAuth": {
-				Key: "FAKE_KEY",
-			},
-		},
-	)
-	config := datadog.NewConfiguration()
-	config.Debug = os.Getenv("DEBUG") == "true"
-	TestAPIClient = datadog.NewAPIClient(config)
-	return func(t *testing.T) {
-		// TEARDOWN testing
+		finish()
 	}
 }

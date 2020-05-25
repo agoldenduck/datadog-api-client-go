@@ -18,35 +18,35 @@ import (
 	"github.com/DataDog/datadog-api-client-go/tests"
 
 	"github.com/DataDog/datadog-api-client-go/api/v1/datadog"
-	"github.com/stretchr/testify/assert"
 	"gopkg.in/h2non/gock.v1"
 	is "gotest.tools/assert/cmp"
 )
 
 func TestHosts(t *testing.T) {
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, finish := WithRecorder(WithTestAuth(context.Background()), t)
+	defer finish()
+	assert := tests.Assert(ctx, t)
 
-	api := TESTAPICLIENT.HostsApi
-	now := TESTCLOCK.Now().Unix()
+	api := Client(ctx).HostsApi
+	now := tests.ClockFromContext(ctx).Now().Unix()
 
-	hostname := fmt.Sprintf("go-client-test-host-%d", now)
+	hostname := *tests.UniqueEntityName(ctx, t)
 
 	// create host by sending a metric
 	metricsPayload := fmt.Sprintf(
 		`{"series": [{"host": "%s", "metric": "go.client.test.metric", "points": [[%f, 0]]}]}`,
 		hostname, float64(now),
 	)
-	httpresp, respBody, err := sendRequest("POST", "/api/v1/series", []byte(metricsPayload))
+	httpresp, respBody, err := SendRequest(ctx, "POST", "/api/v1/series", []byte(metricsPayload))
 	if err != nil {
 		t.Fatalf("Error submitting metric: Response %s: %v", string(respBody), err)
 	}
-	assert.Equal(t, 202, httpresp.StatusCode)
-	assert.Equal(t, `{"status": "ok"}`, string(respBody))
+	assert.Equal(202, httpresp.StatusCode)
+	assert.Equal(`{"status": "ok"}`, string(respBody))
 
 	// wait for host to appear
 	err = tests.Retry(10*time.Second, 10, func() bool {
-		_, httpresp, err := TESTAPICLIENT.TagsApi.GetHostTags(TESTAUTH, hostname).Execute()
+		_, httpresp, err := Client(ctx).TagsApi.GetHostTags(ctx, hostname).Execute()
 		if err != nil {
 			t.Logf("Error getting host tags for %s: Response %s: %v", hostname, err.(datadog.GenericOpenAPIError).Body(), err)
 		}
@@ -61,46 +61,47 @@ func TestHosts(t *testing.T) {
 		Message: datadog.PtrString("muting for test"),
 		End:     datadog.PtrInt64(now + 60),
 	}
-	muteHostResp, httpresp, err := api.MuteHost(TESTAUTH, hostname).Body(hostMuteSettings).Execute()
+	muteHostResp, httpresp, err := api.MuteHost(ctx, hostname).Body(hostMuteSettings).Execute()
 	if err != nil {
 		t.Errorf("Error muting host %s: Response %s: %v", hostname, err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
-	assert.Equal(t, "muting for test", muteHostResp.GetMessage())
-	assert.Equal(t, hostname, muteHostResp.GetHostname())
-	assert.Equal(t, now+60, muteHostResp.GetEnd())
-	assert.Equal(t, "Muted", muteHostResp.GetAction())
+	assert.Equal(200, httpresp.StatusCode)
+	assert.Equal("muting for test", muteHostResp.GetMessage())
+	assert.Equal(hostname, muteHostResp.GetHostname())
+	assert.Equal(now+60, muteHostResp.GetEnd())
+	assert.Equal("Muted", muteHostResp.GetAction())
 
 	hostMuteSettings = datadog.HostMuteSettings{
 		Message: datadog.PtrString("muting for test override"),
 		End:     datadog.PtrInt64(now + 120),
 	}
-	muteHostResp, httpresp, err = api.MuteHost(TESTAUTH, hostname).Body(hostMuteSettings).Execute()
-	assert.NotNil(t, err)
-	assert.Equal(t, 400, httpresp.StatusCode)
+	muteHostResp, httpresp, err = api.MuteHost(ctx, hostname).Body(hostMuteSettings).Execute()
+	assert.NotNil(err)
+	assert.Equal(400, httpresp.StatusCode)
 	hostMuteSettings.SetOverride(true)
-	muteHostResp, httpresp, err = api.MuteHost(TESTAUTH, hostname).Body(hostMuteSettings).Execute()
+	muteHostResp, httpresp, err = api.MuteHost(ctx, hostname).Body(hostMuteSettings).Execute()
 	if err != nil {
 		t.Errorf("Error muting host %s: Response %s: %v", hostname, err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
-	assert.Equal(t, "muting for test override", muteHostResp.GetMessage())
-	assert.Equal(t, hostname, muteHostResp.GetHostname())
-	assert.Equal(t, now+120, muteHostResp.GetEnd())
-	assert.Equal(t, "Muted", muteHostResp.GetAction())
+	assert.Equal(200, httpresp.StatusCode)
+	assert.Equal("muting for test override", muteHostResp.GetMessage())
+	assert.Equal(hostname, muteHostResp.GetHostname())
+	assert.Equal(now+120, muteHostResp.GetEnd())
+	assert.Equal("Muted", muteHostResp.GetAction())
 
-	muteHostResp, httpresp, err = api.UnmuteHost(TESTAUTH, hostname).Execute()
+	muteHostResp, httpresp, err = api.UnmuteHost(ctx, hostname).Execute()
 	if err != nil {
 		t.Errorf("Error unmuting host %s: Response %s: %v", hostname, err.(datadog.GenericOpenAPIError).Body(), err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
-	assert.Equal(t, "Unmuted", muteHostResp.GetAction())
-	assert.Equal(t, hostname, muteHostResp.GetHostname())
+	assert.Equal(200, httpresp.StatusCode)
+	assert.Equal("Unmuted", muteHostResp.GetAction())
+	assert.Equal(hostname, muteHostResp.GetHostname())
 }
 
 func TestHostTotalsMocked(t *testing.T) {
-	teardownTest := setupUnitTest(t)
-	defer teardownTest(t)
+	ctx, finish := WithClient(WithFakeAuth(context.Background()), t)
+	defer finish()
+	assert := tests.Assert(ctx, t)
 	defer gock.Off()
 
 	fixturePath, err := filepath.Abs("fixtures/hosts/host_totals.json")
@@ -112,8 +113,10 @@ func TestHostTotalsMocked(t *testing.T) {
 		t.Errorf("Failed to open fixture file: %s", err)
 	}
 
-	gock.New("https://api.datadoghq.com/api/v1").
-		Get("/hosts/totals").
+	URL, err := Client(ctx).GetConfig().ServerURLWithContext(ctx, "HostsApiService.GetHostTotals")
+	assert.NoError(err)
+	gock.New(URL).
+		Get("/api/v1/hosts/totals").
 		MatchParam("from", "123").
 		Reply(200).
 		JSON(data)
@@ -121,18 +124,19 @@ func TestHostTotalsMocked(t *testing.T) {
 	var expected datadog.HostTotals
 	json.Unmarshal([]byte(data), &expected)
 
-	api := TESTAPICLIENT.HostsApi
-	hostListResp, httpresp, err := api.GetHostTotals(TESTAUTH).From(123).Execute()
+	api := Client(ctx).HostsApi
+	hostListResp, httpresp, err := api.GetHostTotals(ctx).From(123).Execute()
 	if err != nil {
 		t.Errorf("Failed to get host totals: %v", err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
-	assert.True(t, is.DeepEqual(expected, hostListResp)().Success())
+	assert.Equal(200, httpresp.StatusCode)
+	assert.True(is.DeepEqual(expected, hostListResp)().Success())
 }
 
 func TestHostsSearchMocked(t *testing.T) {
-	teardownTest := setupUnitTest(t)
-	defer teardownTest(t)
+	ctx, finish := WithClient(WithFakeAuth(context.Background()), t)
+	defer finish()
+	assert := tests.Assert(ctx, t)
 	defer gock.Off()
 
 	data, err := tests.ReadFixture("fixtures/hosts/host_search.json")
@@ -148,8 +152,10 @@ func TestHostsSearchMocked(t *testing.T) {
 		"sort_field": "status",
 		"start":      "3",
 	}
-	gock.New("https://api.datadoghq.com/api/v1").
-		Get("/hosts").
+	URL, err := Client(ctx).GetConfig().ServerURLWithContext(ctx, "HostsApiService.ListHosts")
+	assert.NoError(err)
+	gock.New(URL).
+		Get("/api/v1/hosts").
 		MatchParams(params).
 		Reply(200).
 		JSON(data)
@@ -157,124 +163,133 @@ func TestHostsSearchMocked(t *testing.T) {
 	var expected datadog.HostListResponse
 	json.Unmarshal([]byte(data), &expected)
 
-	api := TESTAPICLIENT.HostsApi
-	hostListResp, httpresp, err := api.ListHosts(TESTAUTH).Filter("filter string").Count(4).From(123).SortDir("asc").SortField("status").Start(3).Execute()
+	api := Client(ctx).HostsApi
+	hostListResp, httpresp, err := api.ListHosts(ctx).Filter("filter string").Count(4).From(123).SortDir("asc").SortField("status").Start(3).Execute()
 	if err != nil {
 		t.Errorf("Failed to get hosts: %v", err)
 	}
-	assert.Equal(t, 200, httpresp.StatusCode)
-	assert.True(t, is.DeepEqual(expected, hostListResp)().Success())
+	assert.Equal(200, httpresp.StatusCode)
+	assert.True(is.DeepEqual(expected, hostListResp)().Success())
 }
 
 func TestHostsListErrors(t *testing.T) {
-	// Setup the Client we'll use to interact with the Test account
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, close := tests.WithTestSpan(context.Background(), t)
+	defer close()
 
-	testCases := []struct {
-		Name               string
-		Ctx                context.Context
+	testCases := map[string]struct {
+		Ctx                func(context.Context) context.Context
 		ExpectedStatusCode int
 	}{
-		{"400 Bad Request", TESTAUTH, 400},
-		{"403 Forbidden", fake_auth, 403},
+		"400 Bad Request": {WithTestAuth, 400},
+		"403 Forbidden":   {WithFakeAuth, 403},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			_, httpresp, err := TESTAPICLIENT.HostsApi.ListHosts(tc.Ctx).Count(-1).Execute()
-			assert.Equal(t, tc.ExpectedStatusCode, httpresp.StatusCode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, finish := WithRecorder(tc.Ctx(ctx), t)
+			defer finish()
+			assert := tests.Assert(ctx, t)
+
+			_, httpresp, err := Client(ctx).HostsApi.ListHosts(ctx).Count(-1).Execute()
+			assert.Equal(tc.ExpectedStatusCode, httpresp.StatusCode)
 			apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.APIErrorResponse)
-			assert.True(t, ok)
-			assert.NotEmpty(t, apiError.GetErrors())
+			assert.True(ok)
+			assert.NotEmpty(apiError.GetErrors())
 		})
 	}
 }
 
 func TestHostsGetTotalsErrors(t *testing.T) {
-	// Setup the Client we'll use to interact with the Test account
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, close := tests.WithTestSpan(context.Background(), t)
+	defer close()
 
-	testCases := []struct {
-		Name               string
-		Ctx                context.Context
+	testCases := map[string]struct {
+		Ctx                func(context.Context) context.Context
 		ExpectedStatusCode int
 	}{
-		{"400 Bad Request", TESTAUTH, 400},
-		{"403 Forbidden", fake_auth, 403},
+		"400 Bad Request": {WithTestAuth, 400},
+		"403 Forbidden":   {WithFakeAuth, 403},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			_, httpresp, err := TESTAPICLIENT.HostsApi.GetHostTotals(tc.Ctx).From(TESTCLOCK.Now().Unix() + 60).Execute()
-			assert.Equal(t, tc.ExpectedStatusCode, httpresp.StatusCode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, finish := WithRecorder(tc.Ctx(ctx), t)
+			defer finish()
+			assert := tests.Assert(ctx, t)
+
+			_, httpresp, err := Client(ctx).HostsApi.GetHostTotals(ctx).From(tests.ClockFromContext(ctx).Now().Unix() + 60).Execute()
+			assert.Equal(tc.ExpectedStatusCode, httpresp.StatusCode)
 			apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.APIErrorResponse)
-			assert.True(t, ok)
-			assert.NotEmpty(t, apiError.GetErrors())
+			assert.True(ok)
+			assert.NotEmpty(apiError.GetErrors())
 		})
 	}
 }
 
 func TestHostsMuteErrors(t *testing.T) {
 	// Setup the Client we'll use to interact with the Test account
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, finish := WithRecorder(WithTestAuth(context.Background()), t)
+	defer finish()
+	assert := tests.Assert(ctx, t)
 
 	// Mute host a first time in order to trigger a 400
-	hostname := fmt.Sprintf("go-client-test-hostname-%d", TESTCLOCK.Now().Unix())
+	hostname := *tests.UniqueEntityName(ctx, t)
 	muteSettings := *datadog.NewHostMuteSettingsWithDefaults()
 	muteSettings.SetOverride(true)
-	_, httpresp, err := TESTAPICLIENT.HostsApi.MuteHost(TESTAUTH, hostname).Body(muteSettings).Execute()
+	_, httpresp, err := Client(ctx).HostsApi.MuteHost(ctx, hostname).Body(muteSettings).Execute()
 	if err != nil {
 		t.Fatalf("Error muting host %s: Response: %s", hostname, err.(datadog.GenericOpenAPIError).Body())
 	}
-	defer TESTAPICLIENT.HostsApi.UnmuteHost(TESTAUTH, hostname).Execute()
-	assert.Equal(t, 200, httpresp.StatusCode)
+	defer Client(ctx).HostsApi.UnmuteHost(ctx, hostname).Execute()
+	assert.Equal(200, httpresp.StatusCode)
 
-	testCases := []struct {
-		Name               string
-		Ctx                context.Context
+	testCases := map[string]struct {
+		Ctx                func(context.Context) context.Context
 		ExpectedStatusCode int
 	}{
-		{"400 Bad Request", TESTAUTH, 400},
-		{"403 Forbidden", fake_auth, 403},
+		"400 Bad Request": {WithTestAuth, 400},
+		"403 Forbidden":   {WithFakeAuth, 403},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			_, httpresp, err := TESTAPICLIENT.HostsApi.MuteHost(tc.Ctx, hostname).Body(datadog.HostMuteSettings{}).Execute()
-			assert.Equal(t, tc.ExpectedStatusCode, httpresp.StatusCode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, finish := WithRecorder(tc.Ctx(ctx), t)
+			defer finish()
+			assert := tests.Assert(ctx, t)
+
+			_, httpresp, err := Client(ctx).HostsApi.MuteHost(ctx, hostname).Body(datadog.HostMuteSettings{}).Execute()
+			assert.Equal(tc.ExpectedStatusCode, httpresp.StatusCode)
 			apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.APIErrorResponse)
-			assert.True(t, ok)
-			assert.NotEmpty(t, apiError.GetErrors())
+			assert.True(ok)
+			assert.NotEmpty(apiError.GetErrors())
 		})
 	}
 }
 
 func TestHostsUnmuteErrors(t *testing.T) {
-	// Setup the Client we'll use to interact with the Test account
-	teardownTest := setupTest(t)
-	defer teardownTest(t)
+	ctx, close := tests.WithTestSpan(context.Background(), t)
+	defer close()
 
-	hostname := fmt.Sprintf("go-client-test-hostname-%d", TESTCLOCK.Now().Unix())
-
-	testCases := []struct {
-		Name               string
-		Ctx                context.Context
+	testCases := map[string]struct {
+		Ctx                func(context.Context) context.Context
 		ExpectedStatusCode int
 	}{
-		{"400 Bad Request", TESTAUTH, 400},
-		{"403 Forbidden", fake_auth, 403},
+		"400 Bad Request": {WithTestAuth, 400},
+		"403 Forbidden":   {WithFakeAuth, 403},
 	}
 
-	for _, tc := range testCases {
-		t.Run(tc.Name, func(t *testing.T) {
-			_, httpresp, err := TESTAPICLIENT.HostsApi.UnmuteHost(tc.Ctx, hostname).Execute()
-			assert.Equal(t, tc.ExpectedStatusCode, httpresp.StatusCode)
+	for name, tc := range testCases {
+		t.Run(name, func(t *testing.T) {
+			ctx, finish := WithRecorder(tc.Ctx(ctx), t)
+			defer finish()
+			assert := tests.Assert(ctx, t)
+
+			hostname := *tests.UniqueEntityName(ctx, t)
+			_, httpresp, err := Client(ctx).HostsApi.UnmuteHost(ctx, hostname).Execute()
+			assert.Equal(tc.ExpectedStatusCode, httpresp.StatusCode)
 			apiError, ok := err.(datadog.GenericOpenAPIError).Model().(datadog.APIErrorResponse)
-			assert.True(t, ok)
-			assert.NotEmpty(t, apiError.GetErrors())
+			assert.True(ok)
+			assert.NotEmpty(apiError.GetErrors())
 		})
 	}
 }

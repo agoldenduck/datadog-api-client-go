@@ -14,9 +14,9 @@ import (
 
 // DashboardTemplateVariablePreset Template variables saved views.
 type DashboardTemplateVariablePreset struct {
-	// The name of the variable
+	// The name of the variable.
 	Name *string `json:"name,omitempty"`
-	// TODO.
+	// List of variables.
 	TemplateVariables *[]DashboardTemplateVariablePresetValue `json:"template_variables,omitempty"`
 }
 

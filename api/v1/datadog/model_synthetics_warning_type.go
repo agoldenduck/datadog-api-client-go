@@ -12,13 +12,34 @@ import (
 	"encoding/json"
 )
 
-// SyntheticsWarningType TODO.
+import (
+	"fmt"
+)
+
+// SyntheticsWarningType User locator used.
 type SyntheticsWarningType string
 
 // List of SyntheticsWarningType
 const (
 	SYNTHETICSWARNINGTYPE_USER_LOCATOR SyntheticsWarningType = "user_locator"
 )
+
+func (v *SyntheticsWarningType) UnmarshalJSON(src []byte) error {
+	var value string
+	err := json.Unmarshal(src, &value)
+	if err != nil {
+		return err
+	}
+	enumTypeValue := SyntheticsWarningType(value)
+	for _, existing := range []SyntheticsWarningType{"user_locator"} {
+		if existing == enumTypeValue {
+			*v = enumTypeValue
+			return nil
+		}
+	}
+
+	return fmt.Errorf("%+v is not a valid SyntheticsWarningType", *v)
+}
 
 // Ptr returns reference to SyntheticsWarningType value
 func (v SyntheticsWarningType) Ptr() *SyntheticsWarningType {

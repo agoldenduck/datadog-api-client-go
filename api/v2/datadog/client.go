@@ -48,6 +48,10 @@ type APIClient struct {
 
 	DashboardListsApi *DashboardListsApiService
 
+	RolesApi *RolesApiService
+
+	SecurityMonitoringApi *SecurityMonitoringApiService
+
 	UsersApi *UsersApiService
 }
 
@@ -68,6 +72,8 @@ func NewAPIClient(cfg *Configuration) *APIClient {
 
 	// API Services
 	c.DashboardListsApi = (*DashboardListsApiService)(&c.common)
+	c.RolesApi = (*RolesApiService)(&c.common)
+	c.SecurityMonitoringApi = (*SecurityMonitoringApiService)(&c.common)
 	c.UsersApi = (*UsersApiService)(&c.common)
 
 	return c
@@ -366,7 +372,15 @@ func (c *APIClient) decode(v interface{}, b []byte, contentType string) (err err
 		return nil
 	}
 	if jsonCheck.MatchString(contentType) {
-		if err = json.Unmarshal(b, v); err != nil {
+		if actualObj, ok := v.(interface{ GetActualInstance() interface{} }); ok { // oneOf, anyOf schemas
+			if unmarshalObj, ok := actualObj.(interface{ UnmarshalJSON([]byte) error }); ok { // make sure it has UnmarshalJSON defined
+				if err = unmarshalObj.UnmarshalJSON(b); err != nil {
+					return err
+				}
+			} else {
+				errors.New("Unknown type with GetActualInstance but no unmarshalObj.UnmarshalJSON defined")
+			}
+		} else if err = json.Unmarshal(b, v); err != nil { // simple model
 			return err
 		}
 		return nil

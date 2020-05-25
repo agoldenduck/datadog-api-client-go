@@ -14,24 +14,23 @@ import (
 
 // ServiceMapWidgetDefinition This widget displays a map of a service to all of the services that call it, and all of the services that it calls.
 type ServiceMapWidgetDefinition struct {
-	// Your env and primary tag (or * if enabled for your account).
+	// Your environment and primary tag (or * if enabled for your account).
 	Filters []string `json:"filters"`
 	// The ID of the service you want to map.
 	Service string `json:"service"`
 	// The title of your widget.
 	Title      *string          `json:"title,omitempty"`
 	TitleAlign *WidgetTextAlign `json:"title_align,omitempty"`
-	// Size of the title
-	TitleSize *string `json:"title_size,omitempty"`
-	// Type of the widget
-	Type string `json:"type"`
+	// Size of the title.
+	TitleSize *string                        `json:"title_size,omitempty"`
+	Type      ServiceMapWidgetDefinitionType `json:"type"`
 }
 
 // NewServiceMapWidgetDefinition instantiates a new ServiceMapWidgetDefinition object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewServiceMapWidgetDefinition(filters []string, service string, type_ string) *ServiceMapWidgetDefinition {
+func NewServiceMapWidgetDefinition(filters []string, service string, type_ ServiceMapWidgetDefinitionType) *ServiceMapWidgetDefinition {
 	this := ServiceMapWidgetDefinition{}
 	this.Filters = filters
 	this.Service = service
@@ -44,7 +43,7 @@ func NewServiceMapWidgetDefinition(filters []string, service string, type_ strin
 // but it doesn't guarantee that properties required by API are set
 func NewServiceMapWidgetDefinitionWithDefaults() *ServiceMapWidgetDefinition {
 	this := ServiceMapWidgetDefinition{}
-	var type_ string = "servicemap"
+	var type_ ServiceMapWidgetDefinitionType = "servicemap"
 	this.Type = type_
 	return &this
 }
@@ -194,9 +193,9 @@ func (o *ServiceMapWidgetDefinition) SetTitleSize(v string) {
 }
 
 // GetType returns the Type field value
-func (o *ServiceMapWidgetDefinition) GetType() string {
+func (o *ServiceMapWidgetDefinition) GetType() ServiceMapWidgetDefinitionType {
 	if o == nil {
-		var ret string
+		var ret ServiceMapWidgetDefinitionType
 		return ret
 	}
 
@@ -205,7 +204,7 @@ func (o *ServiceMapWidgetDefinition) GetType() string {
 
 // GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
-func (o *ServiceMapWidgetDefinition) GetTypeOk() (*string, bool) {
+func (o *ServiceMapWidgetDefinition) GetTypeOk() (*ServiceMapWidgetDefinitionType, bool) {
 	if o == nil {
 		return nil, false
 	}
@@ -213,7 +212,7 @@ func (o *ServiceMapWidgetDefinition) GetTypeOk() (*string, bool) {
 }
 
 // SetType sets field value
-func (o *ServiceMapWidgetDefinition) SetType(v string) {
+func (o *ServiceMapWidgetDefinition) SetType(v ServiceMapWidgetDefinitionType) {
 	o.Type = v
 }
 
@@ -238,11 +237,6 @@ func (o ServiceMapWidgetDefinition) MarshalJSON() ([]byte, error) {
 		toSerialize["type"] = o.Type
 	}
 	return json.Marshal(toSerialize)
-}
-
-// AsWidgetDefinition wraps this instance of ServiceMapWidgetDefinition in WidgetDefinition
-func (s *ServiceMapWidgetDefinition) AsWidgetDefinition() WidgetDefinition {
-	return WidgetDefinition{WidgetDefinitionInterface: s}
 }
 
 type NullableServiceMapWidgetDefinition struct {

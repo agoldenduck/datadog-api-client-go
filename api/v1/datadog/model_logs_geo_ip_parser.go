@@ -14,30 +14,28 @@ import (
 
 // LogsGeoIPParser The GeoIP parser takes an IP address attribute and extracts if available the Continent, Country, Subdivision, and City information in the target attribute path.
 type LogsGeoIPParser struct {
-	// Array of source attributes.
-	Sources []string `json:"sources"`
-	// Name of the parent attribute that contains all the extracted details from the `sources`.
-	Target string `json:"target"`
-	// Type of processor.
-	Type *string `json:"type,omitempty"`
 	// Whether or not the processor is enabled.
 	IsEnabled *bool `json:"is_enabled,omitempty"`
 	// Name of the processor.
 	Name *string `json:"name,omitempty"`
+	// Array of source attributes.
+	Sources []string `json:"sources"`
+	// Name of the parent attribute that contains all the extracted details from the `sources`.
+	Target string              `json:"target"`
+	Type   LogsGeoIPParserType `json:"type"`
 }
 
 // NewLogsGeoIPParser instantiates a new LogsGeoIPParser object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewLogsGeoIPParser(sources []string, target string) *LogsGeoIPParser {
+func NewLogsGeoIPParser(sources []string, target string, type_ LogsGeoIPParserType) *LogsGeoIPParser {
 	this := LogsGeoIPParser{}
-	this.Sources = sources
-	this.Target = target
-	var type_ string = "geo-ip-parser"
-	this.Type = &type_
 	var isEnabled bool = false
 	this.IsEnabled = &isEnabled
+	this.Sources = sources
+	this.Target = target
+	this.Type = type_
 	return &this
 }
 
@@ -46,93 +44,13 @@ func NewLogsGeoIPParser(sources []string, target string) *LogsGeoIPParser {
 // but it doesn't guarantee that properties required by API are set
 func NewLogsGeoIPParserWithDefaults() *LogsGeoIPParser {
 	this := LogsGeoIPParser{}
-	var target string = "network.client.geoip"
-	this.Target = target
-	var type_ string = "geo-ip-parser"
-	this.Type = &type_
 	var isEnabled bool = false
 	this.IsEnabled = &isEnabled
+	var target string = "network.client.geoip"
+	this.Target = target
+	var type_ LogsGeoIPParserType = "geo-ip-parser"
+	this.Type = type_
 	return &this
-}
-
-// GetSources returns the Sources field value
-func (o *LogsGeoIPParser) GetSources() []string {
-	if o == nil {
-		var ret []string
-		return ret
-	}
-
-	return o.Sources
-}
-
-// GetSourcesOk returns a tuple with the Sources field value
-// and a boolean to check if the value has been set.
-func (o *LogsGeoIPParser) GetSourcesOk() (*[]string, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Sources, true
-}
-
-// SetSources sets field value
-func (o *LogsGeoIPParser) SetSources(v []string) {
-	o.Sources = v
-}
-
-// GetTarget returns the Target field value
-func (o *LogsGeoIPParser) GetTarget() string {
-	if o == nil {
-		var ret string
-		return ret
-	}
-
-	return o.Target
-}
-
-// GetTargetOk returns a tuple with the Target field value
-// and a boolean to check if the value has been set.
-func (o *LogsGeoIPParser) GetTargetOk() (*string, bool) {
-	if o == nil {
-		return nil, false
-	}
-	return &o.Target, true
-}
-
-// SetTarget sets field value
-func (o *LogsGeoIPParser) SetTarget(v string) {
-	o.Target = v
-}
-
-// GetType returns the Type field value if set, zero value otherwise.
-func (o *LogsGeoIPParser) GetType() string {
-	if o == nil || o.Type == nil {
-		var ret string
-		return ret
-	}
-	return *o.Type
-}
-
-// GetTypeOk returns a tuple with the Type field value if set, nil otherwise
-// and a boolean to check if the value has been set.
-func (o *LogsGeoIPParser) GetTypeOk() (*string, bool) {
-	if o == nil || o.Type == nil {
-		return nil, false
-	}
-	return o.Type, true
-}
-
-// HasType returns a boolean if a field has been set.
-func (o *LogsGeoIPParser) HasType() bool {
-	if o != nil && o.Type != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetType gets a reference to the given string and assigns it to the Type field.
-func (o *LogsGeoIPParser) SetType(v string) {
-	o.Type = &v
 }
 
 // GetIsEnabled returns the IsEnabled field value if set, zero value otherwise.
@@ -199,29 +117,96 @@ func (o *LogsGeoIPParser) SetName(v string) {
 	o.Name = &v
 }
 
+// GetSources returns the Sources field value
+func (o *LogsGeoIPParser) GetSources() []string {
+	if o == nil {
+		var ret []string
+		return ret
+	}
+
+	return o.Sources
+}
+
+// GetSourcesOk returns a tuple with the Sources field value
+// and a boolean to check if the value has been set.
+func (o *LogsGeoIPParser) GetSourcesOk() (*[]string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Sources, true
+}
+
+// SetSources sets field value
+func (o *LogsGeoIPParser) SetSources(v []string) {
+	o.Sources = v
+}
+
+// GetTarget returns the Target field value
+func (o *LogsGeoIPParser) GetTarget() string {
+	if o == nil {
+		var ret string
+		return ret
+	}
+
+	return o.Target
+}
+
+// GetTargetOk returns a tuple with the Target field value
+// and a boolean to check if the value has been set.
+func (o *LogsGeoIPParser) GetTargetOk() (*string, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Target, true
+}
+
+// SetTarget sets field value
+func (o *LogsGeoIPParser) SetTarget(v string) {
+	o.Target = v
+}
+
+// GetType returns the Type field value
+func (o *LogsGeoIPParser) GetType() LogsGeoIPParserType {
+	if o == nil {
+		var ret LogsGeoIPParserType
+		return ret
+	}
+
+	return o.Type
+}
+
+// GetTypeOk returns a tuple with the Type field value
+// and a boolean to check if the value has been set.
+func (o *LogsGeoIPParser) GetTypeOk() (*LogsGeoIPParserType, bool) {
+	if o == nil {
+		return nil, false
+	}
+	return &o.Type, true
+}
+
+// SetType sets field value
+func (o *LogsGeoIPParser) SetType(v LogsGeoIPParserType) {
+	o.Type = v
+}
+
 func (o LogsGeoIPParser) MarshalJSON() ([]byte, error) {
 	toSerialize := map[string]interface{}{}
-	if true {
-		toSerialize["sources"] = o.Sources
-	}
-	if true {
-		toSerialize["target"] = o.Target
-	}
-	if o.Type != nil {
-		toSerialize["type"] = o.Type
-	}
 	if o.IsEnabled != nil {
 		toSerialize["is_enabled"] = o.IsEnabled
 	}
 	if o.Name != nil {
 		toSerialize["name"] = o.Name
 	}
+	if true {
+		toSerialize["sources"] = o.Sources
+	}
+	if true {
+		toSerialize["target"] = o.Target
+	}
+	if true {
+		toSerialize["type"] = o.Type
+	}
 	return json.Marshal(toSerialize)
-}
-
-// AsLogsProcessor wraps this instance of LogsGeoIPParser in LogsProcessor
-func (s *LogsGeoIPParser) AsLogsProcessor() LogsProcessor {
-	return LogsProcessor{LogsProcessorInterface: s}
 }
 
 type NullableLogsGeoIPParser struct {

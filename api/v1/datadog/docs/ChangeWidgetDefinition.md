@@ -4,18 +4,18 @@
 
 Name | Type | Description | Notes
 ------------ | ------------- | ------------- | -------------
-**Requests** | Pointer to [**[]ChangeWidgetRequest**](ChangeWidgetRequest.md) | TODO. | 
+**Requests** | Pointer to [**[]ChangeWidgetRequest**](ChangeWidgetRequest.md) | Array of one request object to display in the widget.  See the dedicated [Request JSON schema documentation](https://docs.datadoghq.com/dashboards/graphing_json/request_json)  to learn how to build the &#x60;REQUEST_SCHEMA&#x60;. | 
 **Time** | Pointer to [**WidgetTime**](WidgetTime.md) |  | [optional] 
-**Title** | Pointer to **string** | Title of the widget | [optional] 
+**Title** | Pointer to **string** | Title of the widget. | [optional] 
 **TitleAlign** | Pointer to [**WidgetTextAlign**](WidgetTextAlign.md) |  | [optional] 
-**TitleSize** | Pointer to **string** | Size of the title | [optional] 
-**Type** | Pointer to **string** | Type of the widget | [readonly] [default to "change"]
+**TitleSize** | Pointer to **string** | Size of the title. | [optional] 
+**Type** | Pointer to [**ChangeWidgetDefinitionType**](ChangeWidgetDefinitionType.md) |  | [default to "change"]
 
 ## Methods
 
 ### NewChangeWidgetDefinition
 
-`func NewChangeWidgetDefinition(requests []ChangeWidgetRequest, type_ string, ) *ChangeWidgetDefinition`
+`func NewChangeWidgetDefinition(requests []ChangeWidgetRequest, type_ ChangeWidgetDefinitionType, ) *ChangeWidgetDefinition`
 
 NewChangeWidgetDefinition instantiates a new ChangeWidgetDefinition object
 This constructor will assign default values to properties that have it defined,
@@ -152,30 +152,24 @@ HasTitleSize returns a boolean if a field has been set.
 
 ### GetType
 
-`func (o *ChangeWidgetDefinition) GetType() string`
+`func (o *ChangeWidgetDefinition) GetType() ChangeWidgetDefinitionType`
 
 GetType returns the Type field if non-nil, zero value otherwise.
 
 ### GetTypeOk
 
-`func (o *ChangeWidgetDefinition) GetTypeOk() (*string, bool)`
+`func (o *ChangeWidgetDefinition) GetTypeOk() (*ChangeWidgetDefinitionType, bool)`
 
 GetTypeOk returns a tuple with the Type field if it's non-nil, zero value otherwise
 and a boolean to check if the value has been set.
 
 ### SetType
 
-`func (o *ChangeWidgetDefinition) SetType(v string)`
+`func (o *ChangeWidgetDefinition) SetType(v ChangeWidgetDefinitionType)`
 
 SetType sets Type field to given value.
 
 
-
-### AsWidgetDefinition
-
-`func (s *ChangeWidgetDefinition) AsWidgetDefinition() WidgetDefinition`
-
-Convenience method to wrap this instance of ChangeWidgetDefinition in WidgetDefinition
 
 [[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)
 

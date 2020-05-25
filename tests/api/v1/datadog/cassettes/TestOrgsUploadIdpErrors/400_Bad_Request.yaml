@@ -1,0 +1,57 @@
+---
+version: 1
+interactions:
+- request:
+    body: "--1d76693157d37a63a8836fcbd87e6eb6b0f1b3a81a02d850108b6851ddc3\r\nContent-Disposition:
+      form-data; name=\"idp_file\"; filename=\"error_415.json\"\r\nContent-Type: application/octet-stream\r\n\r\n{\"errors\":
+      [\"Attempt to upload idp metadata with an unsupported Content-Type\"]}\n\r\n--1d76693157d37a63a8836fcbd87e6eb6b0f1b3a81a02d850108b6851ddc3--\r\n"
+    form: {}
+    headers:
+      Accept:
+      - application/json
+      Content-Length:
+      - "262"
+      Content-Type:
+      - multipart/form-data; boundary=1d76693157d37a63a8836fcbd87e6eb6b0f1b3a81a02d850108b6851ddc3
+      Dd-Operation-Id:
+      - UploadIdPForOrg
+      User-Agent:
+      - datadog-api-client-go/1.0.0-beta.2 (go go1.14; os darwin; arch amd64)
+      X-Datadog-Parent-Id:
+      - "6256725549008361374"
+      X-Datadog-Sampling-Priority:
+      - "1"
+      X-Datadog-Trace-Id:
+      - "8867440071354334626"
+    url: https://api.datadoghq.com/api/v1/org/lsqdkjf/idp_metadata
+    method: POST
+  response:
+    body: '{"errors": ["Not allowed to access this organization"]}'
+    headers:
+      Cache-Control:
+      - no-cache
+      Connection:
+      - keep-alive
+      Content-Length:
+      - "55"
+      Content-Security-Policy:
+      - frame-ancestors 'self'; report-uri https://api.datadoghq.com/csp-report
+      Content-Type:
+      - application/json
+      Date:
+      - Tue, 12 May 2020 13:33:10 GMT
+      Dd-Pool:
+      - dogweb_wallace
+      Pragma:
+      - no-cache
+      Strict-Transport-Security:
+      - max-age=15724800;
+      X-Content-Type-Options:
+      - nosniff
+      X-Dd-Version:
+      - "35.2492943"
+      X-Frame-Options:
+      - SAMEORIGIN
+    status: 400 Bad Request
+    code: 400
+    duration: ""

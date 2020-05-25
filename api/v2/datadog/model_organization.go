@@ -16,19 +16,17 @@ import (
 type Organization struct {
 	Attributes *OrganizationAttributes `json:"attributes,omitempty"`
 	// ID of the organization.
-	Id *string `json:"id,omitempty"`
-	// Organizations resource type.
-	Type *string `json:"type,omitempty"`
+	Id   *string           `json:"id,omitempty"`
+	Type OrganizationsType `json:"type"`
 }
 
 // NewOrganization instantiates a new Organization object
 // This constructor will assign default values to properties that have it defined,
 // and makes sure properties required by API are set, but the set of arguments
 // will change when the set of required properties is changed
-func NewOrganization() *Organization {
+func NewOrganization(type_ OrganizationsType) *Organization {
 	this := Organization{}
-	var type_ string = "orgs"
-	this.Type = &type_
+	this.Type = type_
 	return &this
 }
 
@@ -37,8 +35,8 @@ func NewOrganization() *Organization {
 // but it doesn't guarantee that properties required by API are set
 func NewOrganizationWithDefaults() *Organization {
 	this := Organization{}
-	var type_ string = "orgs"
-	this.Type = &type_
+	var type_ OrganizationsType = "orgs"
+	this.Type = type_
 	return &this
 }
 
@@ -106,36 +104,28 @@ func (o *Organization) SetId(v string) {
 	o.Id = &v
 }
 
-// GetType returns the Type field value if set, zero value otherwise.
-func (o *Organization) GetType() string {
-	if o == nil || o.Type == nil {
-		var ret string
+// GetType returns the Type field value
+func (o *Organization) GetType() OrganizationsType {
+	if o == nil {
+		var ret OrganizationsType
 		return ret
 	}
-	return *o.Type
+
+	return o.Type
 }
 
-// GetTypeOk returns a tuple with the Type field value if set, nil otherwise
+// GetTypeOk returns a tuple with the Type field value
 // and a boolean to check if the value has been set.
-func (o *Organization) GetTypeOk() (*string, bool) {
-	if o == nil || o.Type == nil {
+func (o *Organization) GetTypeOk() (*OrganizationsType, bool) {
+	if o == nil {
 		return nil, false
 	}
-	return o.Type, true
+	return &o.Type, true
 }
 
-// HasType returns a boolean if a field has been set.
-func (o *Organization) HasType() bool {
-	if o != nil && o.Type != nil {
-		return true
-	}
-
-	return false
-}
-
-// SetType gets a reference to the given string and assigns it to the Type field.
-func (o *Organization) SetType(v string) {
-	o.Type = &v
+// SetType sets field value
+func (o *Organization) SetType(v OrganizationsType) {
+	o.Type = v
 }
 
 func (o Organization) MarshalJSON() ([]byte, error) {
@@ -146,15 +136,10 @@ func (o Organization) MarshalJSON() ([]byte, error) {
 	if o.Id != nil {
 		toSerialize["id"] = o.Id
 	}
-	if o.Type != nil {
+	if true {
 		toSerialize["type"] = o.Type
 	}
 	return json.Marshal(toSerialize)
-}
-
-// AsUserResponseIncludedItem wraps this instance of Organization in UserResponseIncludedItem
-func (s *Organization) AsUserResponseIncludedItem() UserResponseIncludedItem {
-	return UserResponseIncludedItem{UserResponseIncludedItemInterface: s}
 }
 
 type NullableOrganization struct {
